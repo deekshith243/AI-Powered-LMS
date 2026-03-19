@@ -20,3 +20,24 @@ exports.enrollSubject = async (req, res) => {
     res.status(500).json({ message: 'Server error during enrollment' });
   }
 };
+
+exports.saveSubject = async (req, res) => {
+  try {
+    const { subjectId } = req.body;
+    const userId = req.user.id;
+
+    if (!subjectId) {
+      return res.status(400).json({ message: 'Subject ID is required' });
+    }
+
+    await pool.query(
+      'INSERT IGNORE INTO saved_courses (user_id, subject_id) VALUES (?, ?)',
+      [userId, subjectId]
+    );
+
+    res.status(200).json({ success: true, message: 'Course saved' });
+  } catch (error) {
+    console.error('Save error:', error);
+    res.status(500).json({ message: 'Server error while saving course' });
+  }
+};

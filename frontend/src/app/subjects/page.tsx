@@ -13,6 +13,7 @@ interface Subject {
   thumbnail_url: string;
   price?: number;
   is_free?: boolean;
+  is_enrolled?: boolean;
 }
 
 const getCategory = (subject: Subject) => {
@@ -36,6 +37,7 @@ export default function Subjects() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [enrollingId, setEnrollingId] = useState<number | null>(null);
 
   const TABS = ['All', 'Python', 'Java', 'AI', 'ML', 'Web Dev', 'Cloud', 'DevOps'];
 
@@ -52,6 +54,25 @@ export default function Subjects() {
     };
     fetchSubjects();
   }, []);
+
+  const handleEnroll = async (subjectId: number) => {
+    setEnrollingId(subjectId);
+    try {
+      await api.post('/courses/enroll', { subject_id: subjectId });
+      // Refresh subjects to update enrollment status
+      const res = await api.get('/subjects');
+      setSubjects(res.data);
+    } catch (err: any) {
+      console.error(err);
+      if (err.response?.status === 401) {
+        window.location.href = '/login';
+      } else {
+        alert('Failed to process enrollment.');
+      }
+    } finally {
+      setEnrollingId(null);
+    }
+  };
 
   if (error) {
     return (
@@ -158,7 +179,6 @@ export default function Subjects() {
         ) : (
           <div className="space-y-12">
             
-            {/* 6. SECTION DIVIDERS (if showing All) */}
             {activeCategory === 'All' && !searchQuery ? (
               <>
                 <section>
@@ -166,7 +186,7 @@ export default function Subjects() {
                     <span className="mr-2 text-orange-500">🔥</span> Popular Courses
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredSubjects.slice(0, 4).map(sub => <CourseCard key={sub.id} subject={sub} />)}
+                    {filteredSubjects.slice(0, 4).map(sub => <CourseCard key={sub.id} subject={sub} onEnroll={handleEnroll} enrollingId={enrollingId} />)}
                   </div>
                 </section>
                 
@@ -177,7 +197,7 @@ export default function Subjects() {
                     <span className="mr-2 text-indigo-500">📚</span> All Courses
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredSubjects.map(sub => <CourseCard key={sub.id} subject={sub} />)}
+                    {filteredSubjects.map(sub => <CourseCard key={sub.id} subject={sub} onEnroll={handleEnroll} enrollingId={enrollingId} />)}
                   </div>
                 </section>
               </>
@@ -186,9 +206,8 @@ export default function Subjects() {
                 <h2 className="text-2xl font-extrabold text-gray-900 mb-6 border-b border-gray-200 pb-2">
                   {searchQuery ? 'Search Results' : activeCategory}
                 </h2>
-                {/* 4. GRID LAYOUT */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredSubjects.map(sub => <CourseCard key={sub.id} subject={sub} />)}
+                  {filteredSubjects.map(sub => <CourseCard key={sub.id} subject={sub} onEnroll={handleEnroll} enrollingId={enrollingId} />)}
                 </div>
               </section>
             )}
@@ -202,13 +221,19 @@ export default function Subjects() {
 }
 
 // 2. IMPROVED COURSE CARDS
-function CourseCard({ subject }: { subject: Subject }) {
+function CourseCard({ subject, onEnroll, enrollingId }: { subject: Subject, onEnroll: (id: number) => void, enrollingId: number | null }) {
+  const isEnrolling = enrollingId === subject.id;
+
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 flex flex-col h-[400px] overflow-hidden group relative">
       
       {/* Badges */}
-      <div className="absolute top-3 right-3 z-10">
-        {subject.is_free ? (
+      <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-2">
+        {subject.is_enrolled ? (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-600 text-white shadow-md">
+            Enrolled
+          </span>
+        ) : subject.is_free ? (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500 text-white shadow-md">
             Free
           </span>
@@ -233,7 +258,6 @@ function CourseCard({ subject }: { subject: Subject }) {
             <span className="text-sm font-medium">No Thumbnail</span>
           </div>
         )}
-        {/* Subtle overlay gradient to ensure badge stands out */}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
 
@@ -246,13 +270,24 @@ function CourseCard({ subject }: { subject: Subject }) {
           {subject.description}
         </p>
         
-        {/* View Course Button */}
-        <Link
-          href={`/learn/${subject.id}`}
-          className="w-full block text-center px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-sm"
-        >
-          View Course
-        </Link>
+        <div className="flex gap-2">
+          {!subject.is_enrolled && !subject.is_free ? (
+            <button
+              onClick={() => onEnroll(subject.id)}
+              disabled={isEnrolling}
+              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 transition-colors shadow-sm disabled:opacity-50"
+            >
+              {isEnrolling ? 'Processing...' : 'Buy Course'}
+            </button>
+          ) : null}
+          
+          <Link
+            href={`/learn/${subject.id}`}
+            className={`${(!subject.is_enrolled && !subject.is_free) ? 'flex-1' : 'w-full'} block text-center px-4 py-2.5 rounded-lg text-sm font-bold text-white ${subject.is_enrolled ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-800 hover:bg-gray-900'} transition-colors shadow-sm`}
+          >
+            {subject.is_enrolled ? 'Go to Course' : 'View Course'}
+          </Link>
+        </div>
       </div>
     </div>
   );

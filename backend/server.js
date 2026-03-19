@@ -65,7 +65,7 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/notes', noteRoutes);
-app.use('/api/enroll', enrollmentRoutes);
+app.use('/api/courses/enroll', enrollmentRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

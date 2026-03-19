@@ -1,14 +1,19 @@
 const pool = require('../config/db');
 
 class SubjectService {
-  static async getAllSubjects(type) {
-    let query = 'SELECT * FROM subjects';
-    const params = [];
+  static async getAllSubjects(type, userId) {
+    let query = `
+      SELECT s.*, 
+             CASE WHEN e.id IS NOT NULL THEN TRUE ELSE FALSE END as is_enrolled
+      FROM subjects s
+      LEFT JOIN enrollments e ON s.id = e.subject_id AND e.user_id = ?
+    `;
+    const params = [userId || null];
     
     if (type === 'free') {
-      query += ' WHERE price = 0';
+      query += ' WHERE s.price = 0';
     } else if (type === 'paid') {
-      query += ' WHERE price > 0';
+      query += ' WHERE s.price > 0';
     }
     
     const [rows] = await pool.query(query, params);

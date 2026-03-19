@@ -6,6 +6,7 @@ import api from '../../../../lib/api';
 import { CheckCircle, ChevronLeft, ChevronRight, Lock, AlertCircle, FileText, BrainCircuit, Edit3, Save } from 'lucide-react';
 import Link from 'next/link';
 import { Spinner } from '../../../components/ui/Spinner';
+import VideoPlayer from '../../../components/VideoPlayer';
 
 interface VideoData {
   id: number;
@@ -143,7 +144,7 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
     if (!video) return;
     setEnrolling(true);
     try {
-      await api.post('/enroll', { subject_id: video.subject_id });
+      await api.post('/courses/enroll', { subject_id: video.subject_id });
       window.location.reload();
     } catch (err) {
       console.error(err);
@@ -199,12 +200,10 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
                 <span className="text-lg font-medium text-gray-300">Video unavailable</span>
               </div>
             ) : (
-              <iframe 
-                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&start=${startPos}&rel=0&modestbranding=1`}
-                className="w-full h-full absolute top-0 left-0 border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              <VideoPlayer 
+                videoId={ytId}
                 title={video.title}
-                allowFullScreen
+                startPos={startPos}
               />
             )}
           </div>
