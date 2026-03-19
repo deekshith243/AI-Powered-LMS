@@ -19,7 +19,6 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.20.0",
-    "openai": "^6.32.0",
     "pdfkit": "^0.18.0",
     "yt-search": "^2.13.1"
   },
