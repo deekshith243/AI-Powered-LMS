@@ -47,6 +47,16 @@ app.get('/api/db-test', async (req, res) => {
   }
 });
 
+app.get('/api/db-inspect', async (req, res) => {
+  try {
+    const pool = require('./src/config/db');
+    const [rows] = await pool.query('DESCRIBE subjects');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/subjects', subjectRoutes);
