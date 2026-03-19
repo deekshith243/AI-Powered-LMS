@@ -17,6 +17,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://ai-powered-lms-app.vercel.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -31,6 +32,20 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const pool = require('./src/config/db');
+    const [rows] = await pool.query('SELECT 1 as connected');
+    res.json({ status: 'connected', result: rows[0] });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
