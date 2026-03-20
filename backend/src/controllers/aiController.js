@@ -230,3 +230,163 @@ exports.searchLessons = async (req, res) => {
     return res.json({ results: [] });
   }
 };
+// ─── AI RESUME GENERATOR ──────────────────────────────────
+exports.generateResume = async (req, res) => {
+  console.log('generateResume called with body:', req.body);
+  try {
+    const { role, name, skills } = req.body;
+    
+    const prompt = `Generate a professional ATS-friendly resume for a ${role || 'Software Developer'}.
+Name: ${name || 'John Doe'}
+Additional Skills: ${skills || 'None provided'}
+
+Include:
+- Summary
+- Skills
+- Projects
+- Experience (realistic entry/mid level)
+- Education
+- Use clean bullet points. Return ONLY the resume content.`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const resume = completion.choices[0]?.message?.content || "Resume generation failed.";
+    return res.json({ resume });
+  } catch (err) {
+    console.error("GROQ ERROR (Resume):", err.message);
+    return res.status(500).json({ resume: "Failed to generate resume." });
+  }
+};
+
+// ─── ATS ANALYZER ─────────────────────────────────────────
+exports.analyzeATS = async (req, res) => {
+  try {
+    const { resumeText, targetRole } = req.body;
+    
+    const prompt = `Analyze this resume for ATS compatibility for the role: ${targetRole || 'Software Engineer'}.
+Resume Text: ${resumeText}
+
+Return ONLY a specific JSON object (no other text):
+{
+  "score": 75,
+  "missing_skills": ["List", "of", "skills"],
+  "suggestions": ["List", "of", "improvements"],
+  "required_skills": ["List", "of", "critical", "skills"]
+}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    let content = completion.choices[0]?.message?.content || "{}";
+    let analysis;
+    try {
+      analysis = JSON.parse(content);
+    } catch (e) {
+      console.error("ATS Parse Error:", e);
+      const match = content.match(/\{[\s\S]*\}/);
+      analysis = match ? JSON.parse(match[0]) : { score: 0, missing_skills: [], suggestions: ["Error analyzing resume format."], required_skills: [] };
+    }
+
+    return res.json(analysis);
+  } catch (err) {
+    console.error("GROQ ERROR (ATS):", err.message);
+    return res.status(500).json({ message: "ATS analysis failed." });
+  }
+};
+
+// ─── RESUME IMPROVER ──────────────────────────────────────
+exports.improveResume = async (req, res) => {
+  try {
+    const { resumeText, targetRole } = req.body;
+    
+    const prompt = `Rewrite this resume to be an industry-level, ATS-optimized resume for the role: ${targetRole || 'Professional'}.
+Original Resume: ${resumeText}
+Make it strong, professional, and keyword-rich. Return ONLY the improved resume content.`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const improved_resume = completion.choices[0]?.message?.content || "Resume improvement failed.";
+    return res.json({ improved_resume });
+  } catch (err) {
+    console.error("GROQ ERROR (Improve):", err.message);
+    return res.status(500).json({ improved_resume: "Failed to improve resume." });
+  }
+};
+
+// ─── MOCK INTERVIEW START ──────────────────────────────────
+exports.startInterview = async (req, res) => {
+  try {
+    const { role } = req.body;
+    
+    const prompt = `Generate 5 technical interview questions for a ${role || 'Software Developer'}.
+Return ONLY a JSON object with the key "questions" containing an array of strings.`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    let content = completion.choices[0]?.message?.content || "{}";
+    let data;
+    try {
+      data = JSON.parse(content);
+    } catch (e) {
+      const match = content.match(/\{[\s\S]*\}/);
+      data = match ? JSON.parse(match[0]) : { questions: ["What is your experience with this role?", "How do you handle technical challenges?", "Explain a project you worked on.", "What are your strengths?", "Where do you see yourself in 5 years?"] };
+    }
+
+    return res.json(data);
+  } catch (err) {
+    console.error("GROQ ERROR (Interview Start):", err.message);
+    return res.status(500).json({ message: "Interview start failed." });
+  }
+};
+
+// ─── MOCK INTERVIEW EVALUATE ──────────────────────────────
+exports.evaluateInterview = async (req, res) => {
+  try {
+    const { role, questions, userAnswers } = req.body;
+    
+    const prompt = `Evaluate these interview answers for a ${role || 'Professional'} role.
+Questions: ${JSON.stringify(questions)}
+User Answers: ${JSON.stringify(userAnswers)}
+
+Return ONLY a specific JSON object (no other text):
+{
+  "score": 80,
+  "strengths": "Provide a summary of strengths",
+  "weaknesses": "Provide a summary of weaknesses",
+  "feedback": "Provide general feedback and tips"
+}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    let content = completion.choices[0]?.message?.content || "{}";
+    let evaluation;
+    try {
+      evaluation = JSON.parse(content);
+    } catch (e) {
+      const match = content.match(/\{[\s\S]*\}/);
+      evaluation = match ? JSON.parse(match[0]) : { score: 0, strengths: "N/A", weaknesses: "N/A", feedback: "Evaluation failed to process." };
+    }
+
+    return res.json(evaluation);
+  } catch (err) {
+    console.error("GROQ ERROR (Interview Eval):", err.message);
+    return res.status(500).json({ message: "Evaluation failed." });
+  }
+};

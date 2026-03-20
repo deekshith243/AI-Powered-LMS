@@ -14,6 +14,11 @@ const enrollmentRoutes = require('./src/routes/enrollmentRoutes');
 
 const app = express();
 
+app.use((req, res, next) => {
+  console.log(`[TRACE] ${req.method} ${req.url}`);
+  next();
+});
+
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -62,6 +67,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/progress', progressRoutes);
+const { generateResume } = require('./src/controllers/aiController');
+app.post('/api/ai/resume', generateResume);
 app.use('/api/ai', aiRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/notes', noteRoutes);
@@ -72,7 +79,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong on the server' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

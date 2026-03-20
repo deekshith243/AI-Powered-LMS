@@ -10,7 +10,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'https://lms-backend-prod-3935.onrender.com/api/:path*',
+        destination: 'http://localhost:5001/api/:path*',
       },
 
     ];

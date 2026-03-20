@@ -1,5 +1,9 @@
 const express = require('express');
-const { generateSummary, chatTutor, generateQuiz, getRecommendations, searchLessons, askDoubt, generateCareerPath } = require('../controllers/aiController');
+const { 
+  generateSummary, chatTutor, generateQuiz, getRecommendations, searchLessons, 
+  askDoubt, generateCareerPath, generateResume, analyzeATS, 
+  improveResume, startInterview, evaluateInterview 
+} = require('../controllers/aiController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -11,5 +15,12 @@ router.post('/doubt', authMiddleware, askDoubt);
 router.post('/career', authMiddleware, generateCareerPath);
 router.get('/recommendations/:userId', authMiddleware, getRecommendations);
 router.post('/search', authMiddleware, searchLessons);
+
+// Career Suite Routes
+router.post('/resume', generateResume);
+router.post('/ats', authMiddleware, analyzeATS);
+router.post('/resume-improve', authMiddleware, improveResume);
+router.post('/interview/start', authMiddleware, startInterview);
+router.post('/interview/evaluate', authMiddleware, evaluateInterview);
 
 module.exports = router;
