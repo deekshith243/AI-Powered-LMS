@@ -71,8 +71,32 @@ exports.login = async (req, res) => {
       [user.id, tokens.refreshToken, expiresAt]
     );
 
+    // ─── STREAK LOGIC ──────────────────────────────────────
+    const today = new Date().toISOString().split('T')[0];
+    const lastLogin = user.last_login_date ? new Date(user.last_login_date).toISOString().split('T')[0] : null;
+    
+    let newStreak = user.streak || 0;
+    
+    if (!lastLogin) {
+      newStreak = 1;
+    } else if (lastLogin !== today) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      if (lastLogin === yesterdayStr) {
+        newStreak += 1;
+      } else {
+        newStreak = 1;
+      }
+    }
+    
+    // Update streak and last login
+    await pool.query('UPDATE users SET streak = ?, last_login_date = ? WHERE id = ?', [newStreak, today, user.id]);
+    // ───────────────────────────────────────────────────────
+
     res.json({
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, points: user.points, streak: newStreak },
       ...tokens
     });
   } catch (error) {

@@ -4,9 +4,16 @@ exports.getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const [users] = await pool.query('SELECT id, name, email, role, created_at FROM users WHERE id = ?', [userId]);
+    const [users] = await pool.query('SELECT id, name, email, role, points, streak, created_at FROM users WHERE id = ?', [userId]);
     if (users.length === 0) return res.status(404).json({ message: 'User not found' });
     const user = users[0];
+
+    // Get badges for user
+    const [userBadges] = await pool.query(`
+      SELECT b.* FROM badges b
+      WHERE b.points_required <= ?
+    `, [user.points]);
+    user.badges = userBadges;
 
     // Get subjects the user has started (by checking video_progress)
     const [progressStats] = await pool.query(`

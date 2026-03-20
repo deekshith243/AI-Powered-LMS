@@ -86,11 +86,17 @@ class VideoService {
   }
 
   static async markVideoComplete(videoId, userId) {
-     await pool.query(`
+    const [result] = await pool.query(`
       INSERT INTO video_progress (user_id, video_id, completed) 
       VALUES (?, ?, TRUE) 
       ON DUPLICATE KEY UPDATE completed = TRUE
     `, [userId, videoId]);
+
+    // If it was a new completion (not already completed), award points
+    if (result.affectedRows > 0) {
+      await pool.query('UPDATE users SET points = points + 10 WHERE id = ?', [userId]);
+    }
+    
     return { success: true };
   }
 }

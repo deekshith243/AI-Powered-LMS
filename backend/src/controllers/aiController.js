@@ -68,6 +68,54 @@ exports.chatTutor = async (req, res) => {
   }
 };
 
+// ─── ASK DOUBT ───────────────────────────────────────────
+exports.askDoubt = async (req, res) => {
+  try {
+    const { question, courseTitle, lessonTitle } = req.body;
+    
+    const prompt = `You are an expert tutor for ${courseTitle || 'this course'}.
+The student is currently learning '${lessonTitle || 'a lesson'}'.
+Answer clearly with examples:
+${question}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const answer = completion.choices[0]?.message?.content || "I'm sorry, I couldn't answer that right now.";
+    return res.json({ answer });
+  } catch (err) {
+    console.error("GROQ ERROR (Doubt):", err.message);
+    return res.status(500).json({ answer: "I'm sorry, I'm having trouble thinking clearly. Try again later!" });
+  }
+};
+
+// ─── CAREER PATH GENERATOR ──────────────────────────────
+exports.generateCareerPath = async (req, res) => {
+  try {
+    const { goal } = req.body;
+    
+    const prompt = `Create a step-by-step learning roadmap for becoming a ${goal || 'professional'}.
+Include:
+- Required skills
+- Recommended topics
+- Logical course sequence
+Use Markdown for formatting.`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const roadmap = completion.choices[0]?.message?.content || "Roadmap generation failed.";
+    return res.json({ roadmap });
+  } catch (err) {
+    console.error("GROQ ERROR (Career):", err.message);
+    return res.status(500).json({ roadmap: "Failed to generate roadmap. Please try again later." });
+  }
+};
+
 // ─── QUIZ ────────────────────────────────────────────────
 exports.generateQuiz = async (req, res) => {
   try {

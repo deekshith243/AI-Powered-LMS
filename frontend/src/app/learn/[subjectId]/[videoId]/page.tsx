@@ -41,6 +41,11 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
   const [quiz, setQuiz] = useState<any[]>([]);
   const [loadingQuiz, setLoadingQuiz] = useState(false);
   
+  // Doubt States
+  const [doubtQuestion, setDoubtQuestion] = useState('');
+  const [doubtAnswer, setDoubtAnswer] = useState('');
+  const [loadingDoubt, setLoadingDoubt] = useState(false);
+  
   // Note States
   const [noteContent, setNoteContent] = useState('');
   const [savingNote, setSavingNote] = useState(false);
@@ -124,6 +129,25 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
         setQuiz([{ question: "Failed to generate quiz. Please try again later.", options: [], answer: "" }]);
      } finally {
         setLoadingQuiz(false);
+     }
+  };
+
+  const askDoubt = async () => {
+     if (!video || !doubtQuestion.trim()) return;
+     setLoadingDoubt(true);
+     setDoubtAnswer('');
+     try {
+        const res = await api.post('/ai/doubt', { 
+           question: doubtQuestion, 
+           courseTitle: params.subjectId, // Or subjectTitle if available
+           lessonTitle: video.title 
+        });
+        setDoubtAnswer(res.data.answer);
+     } catch (err) {
+        console.error(err);
+        setDoubtAnswer("Failed to get an answer. Please try again.");
+     } finally {
+        setLoadingDoubt(false);
      }
   };
 
@@ -255,7 +279,7 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
              {video.next_video_id ? (
                 <Link
                   href={video.completed ? `/learn/${params.subjectId}/${video.next_video_id}` : '#'}
-                  className={`w-full sm:w-auto inline-flex justify-center items-center px-5 py-2.5 border shadow-sm text-sm font-medium rounded-lg transition-all ${
+                  className={`w-full sm:w-auto inline-flex justify-center items-center px-5 py-2.5 border shadow-sm text-sm font-medium rounded-lg transition-all premium-button ${
                     video.completed
                       ? 'border-indigo-600 text-white bg-indigo-600 hover:bg-indigo-700 hover:shadow-md'
                       : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
@@ -281,8 +305,53 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
         {/* AI Features & Notes Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8 pb-12">
             
+            {/* AI Doubt Solver Card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-6 flex flex-col h-[400px] premium-card">
+               <div className="flex items-center space-x-3 border-b border-gray-100 pb-4 mb-4">
+                  <div className="p-2 bg-orange-50 rounded-lg text-orange-600">
+                     <BrainCircuit className="w-6 h-6" />
+                  </div>
+                  <div>
+                     <h3 className="text-lg font-bold text-gray-900">AI Doubt Solver</h3>
+                     <p className="text-xs text-gray-500">Stuck? Ask me anything!</p>
+                  </div>
+               </div>
+               
+               <div className="flex-1 flex flex-col space-y-4">
+                  <div className="flex-1 overflow-y-auto text-sm text-gray-700 bg-orange-50 bg-opacity-30 p-3 rounded-xl border border-orange-100 italic">
+                     {loadingDoubt ? (
+                        <div className="flex items-center space-x-2 text-orange-600 font-medium">
+                           <Spinner className="w-4 h-4 text-orange-500" /> <span>Thinking...</span>
+                        </div>
+                     ) : doubtAnswer ? (
+                        <p>{doubtAnswer}</p>
+                     ) : (
+                        <p className="text-gray-400 text-center py-8">Your answer will appear here...</p>
+                     )}
+                  </div>
+                  
+                  <div className="relative">
+                     <input 
+                        type="text"
+                        placeholder="Ask a specific doubt..."
+                        className="w-full pl-4 pr-12 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 outline-none shadow-sm"
+                        value={doubtQuestion}
+                        onChange={(e) => setDoubtQuestion(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && askDoubt()}
+                     />
+                     <button 
+                        onClick={askDoubt}
+                        disabled={loadingDoubt || !doubtQuestion.trim()}
+                        className="absolute right-2 top-1.5 p-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
+                     >
+                        <ChevronRight className="w-5 h-5" />
+                     </button>
+                  </div>
+               </div>
+            </div>
+
             {/* Personal Notes Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-emerald-50 p-6 flex flex-col h-[400px]">
+            <div className="bg-white rounded-2xl shadow-sm border border-emerald-50 p-6 flex flex-col h-[400px] premium-card">
                <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
                   <div className="flex items-center space-x-3">
                      <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
@@ -312,7 +381,7 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
             </div>
 
             {/* AI Summary Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 p-6 flex flex-col">
+            <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 p-6 flex flex-col premium-card">
                <div className="flex items-center space-x-3 border-b border-gray-100 pb-4 mb-4">
                   <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                      <FileText className="w-6 h-6" />
@@ -342,7 +411,7 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
             </div>
 
             {/* AI Quiz Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-purple-50 p-6 flex flex-col">
+            <div className="bg-white rounded-2xl shadow-sm border border-purple-50 p-6 flex flex-col premium-card">
                <div className="flex items-center space-x-3 border-b border-gray-100 pb-4 mb-4">
                   <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
                      <BrainCircuit className="w-6 h-6" />
