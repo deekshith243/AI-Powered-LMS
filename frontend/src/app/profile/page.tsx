@@ -133,7 +133,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight mb-8">My Dashboard</h1>
+      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight mb-8">🚀 MY NEW DASHBOARD 🚀</h1>
 
       {/* Personal Info */}
       <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-8 flex items-center justify-between">
@@ -225,68 +225,54 @@ export default function Profile() {
       </div>
 
       {/* 🚀 AI Career Suite Section */}
-      <section className="mt-16 animate-fade-in">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
-            <Briefcase className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">🚀 AI Career Suite</h2>
-            <p className="text-gray-500 text-sm">Professional tools to accelerate your career growth</p>
-          </div>
-        </div>
-
-        {/* Tab System */}
-        <div className="flex flex-wrap gap-3 mb-8 p-1 bg-gray-50 rounded-2xl border border-gray-100">
+      <div className="mt-16 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          🚀 AI Career Suite
+        </h2>
+        
+        <div className="flex flex-wrap gap-3 mt-6">
           <button 
             onClick={() => setActiveTab("resume")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'resume' ? 'bg-white text-blue-600 shadow-sm border border-blue-100' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all border ${activeTab === 'resume' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
           >
-            <FileText className="w-4 h-4" />
             Resume
           </button>
           <button 
             onClick={() => setActiveTab("ats")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'ats' ? 'bg-white text-purple-600 shadow-sm border border-purple-100' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all border ${activeTab === 'ats' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
           >
-            <ShieldCheck className="w-4 h-4" />
             ATS Score
           </button>
           <button 
             onClick={() => setActiveTab("improve")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'improve' ? 'bg-white text-emerald-600 shadow-sm border border-emerald-100' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all border ${activeTab === 'improve' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
           >
-            <Briefcase className="w-4 h-4" />
             Improve
           </button>
           <button 
             onClick={() => setActiveTab("interview")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'interview' ? 'bg-white text-indigo-600 shadow-sm border border-indigo-100' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all border ${activeTab === 'interview' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
           >
-            <BrainCircuit className="w-4 h-4" />
             Interview
           </button>
           <button 
             onClick={() => setActiveTab("career")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'career' ? 'bg-white text-emerald-600 shadow-sm border border-emerald-100' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all border ${activeTab === 'career' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
           >
-            <Briefcase className="w-4 h-4" />
             Career Path
           </button>
         </div>
 
-        {/* Debug Text */}
-        <p className="text-xs text-gray-400 mb-4 ml-2">Active Tab: {activeTab}</p>
+        <p className="mt-4 text-sm font-medium text-gray-400">Active Tab: {activeTab}</p>
 
-        {/* Component Rendering */}
-        <div className="mt-4 transition-all duration-500">
+        <div className="mt-8">
           {activeTab === "resume" && <ResumeGenerator />}
           {activeTab === "ats" && <ATSAnalyzer />}
           {activeTab === "improve" && <ResumeImprover />}
           {activeTab === "interview" && <MockInterview />}
           {activeTab === "career" && <CareerPathGenerator />}
         </div>
-      </section>
+      </div>
 
       {/* Enrolled Subjects */}
       <div>
