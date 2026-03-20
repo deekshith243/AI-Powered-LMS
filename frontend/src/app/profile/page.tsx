@@ -133,7 +133,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight mb-8">🚀 MY NEW DASHBOARD 🚀</h1>
+      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight mb-8">My Dashboard</h1>
 
       {/* Personal Info */}
       <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-8 flex items-center justify-between">
