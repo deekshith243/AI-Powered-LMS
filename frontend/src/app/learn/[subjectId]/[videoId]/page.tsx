@@ -114,8 +114,10 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
   const generateQuiz = async () => {
      if (!video) return;
      setLoadingQuiz(true);
+     setQuizScore(null);
+     setUserAnswers({});
      try {
-        const res = await api.post('/ai/quiz', { title: video.title });
+        const res = await api.post('/ai/quiz', { topic: video.title });
         setQuiz(res.data.quiz);
      } catch (err) {
         console.error(err);
@@ -123,6 +125,19 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
      } finally {
         setLoadingQuiz(false);
      }
+  };
+
+  const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
+  const [quizScore, setQuizScore] = useState<number | null>(null);
+
+  const handleQuizSubmit = () => {
+    let score = 0;
+    quiz.forEach((q: any, idx: number) => {
+      if (userAnswers[idx] === q.answer) {
+        score++;
+      }
+    });
+    setQuizScore(score);
   };
 
   const saveNote = async () => {
@@ -337,29 +352,65 @@ export default function VideoPage({ params }: { params: { subjectId: string; vid
                      <p className="text-xs text-gray-500">Test your understanding with an AI-generated quiz</p>
                   </div>
                </div>
-               
-               <div className="flex-1 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto">
                   {loadingQuiz ? (
                      <div className="flex items-center space-x-2 text-purple-600 font-medium text-sm">
                         <Spinner className="w-4 h-4 text-purple-600" /> <span>Crafting questions...</span>
                      </div>
                   ) : quiz.length > 0 ? (
                      <div className="space-y-6">
-                        {quiz.map((q, idx) => (
-                           <div key={idx} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        {quiz.map((q: any, idx: number) => (
+                           <div key={idx} className={`bg-gray-50 p-4 rounded-xl border ${quizScore !== null ? (userAnswers[idx] === q.answer ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50') : 'border-gray-100'}`}>
                               <p className="font-semibold text-gray-900 text-sm mb-3">{idx + 1}. {q.question}</p>
                               {q.options && q.options.length > 0 ? (
                                  <div className="space-y-2">
                                     {q.options.map((opt: string, oIdx: number) => (
                                        <label key={oIdx} className="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer p-2 hover:bg-white rounded-md transition">
-                                          <input type="radio" name={`quiz-${idx}`} className="text-purple-600 focus:ring-purple-500" />
-                                          <span>{opt}</span>
+                                          <input 
+                                            type="radio" 
+                                            name={`quiz-${idx}`} 
+                                            className="text-purple-600 focus:ring-purple-500" 
+                                            checked={userAnswers[idx] === oIdx}
+                                            onChange={() => quizScore === null && setUserAnswers(prev => ({ ...prev, [idx]: oIdx }))}
+                                            disabled={quizScore !== null}
+                                          />
+                                          <span className={`${quizScore !== null && q.answer === oIdx ? 'text-green-600 font-bold' : ''}`}>
+                                            {opt}
+                                          </span>
                                        </label>
                                     ))}
                                  </div>
                               ) : null}
+                              {quizScore !== null && (
+                                <p className="mt-2 text-xs font-medium">
+                                  {userAnswers[idx] === q.answer ? (
+                                    <span className="text-green-600">Correct!</span>
+                                  ) : (
+                                    <span className="text-red-600">Wrong. Correct answer: {q.options[q.answer]}</span>
+                                  )}
+                                </p>
+                              )}
                            </div>
                         ))}
+                        
+                        {quizScore === null ? (
+                          <button 
+                            onClick={handleQuizSubmit}
+                            className="w-full py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition shadow-md"
+                          >
+                            Submit Quiz
+                          </button>
+                        ) : (
+                          <div className="p-4 bg-white border-2 border-purple-200 rounded-xl text-center">
+                            <p className="text-lg font-bold text-purple-600">Score: {quizScore} / {quiz.length}</p>
+                            <button 
+                              onClick={generateQuiz}
+                              className="mt-2 text-sm text-purple-600 hover:underline font-medium"
+                            >
+                              Retake Quiz
+                            </button>
+                          </div>
+                        )}
                      </div>
                   ) : (
                      <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-6">

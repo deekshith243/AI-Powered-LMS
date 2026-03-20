@@ -1,38 +1,63 @@
 const pool = require('../config/db');
+const Groq = require('groq-sdk');
 require('dotenv').config();
 
-// OpenAI dependency removed to ensure application stability without an API key.
-// All AI features now use high-quality fallback logic.
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
 
 // ─── SUMMARY ─────────────────────────────────────────────
 exports.generateSummary = async (req, res) => {
   try {
-    const { title, description } = req.body;
-    
-    // Fallback logic for lesson summary
-    const result = "Lesson overview: " + (title || "Content summary not available.");
-    return res.json({ result, summary: result });
+    const { title, lessonContent } = req.body;
+    const content = lessonContent || title || "No content provided.";
+
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: `Summarize this lesson in simple terms for students: ${content}`
+        }
+      ],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const summary = completion.choices[0]?.message?.content || "Could not generate summary.";
+    return res.json({ summary, result: summary });
   } catch (err) {
-    console.error("AI ERROR (Summary):", err.message);
-    return res.json({
-      result: "AI summary temporarily unavailable.",
-      summary: "AI summary temporarily unavailable."
+    console.error("GROQ ERROR (Summary):", err.message);
+    return res.status(500).json({
+      summary: "AI summary temporarily unavailable.",
+      result: "AI summary temporarily unavailable."
     });
   }
 };
 
-// ─── CHAT TUTOR ──────────────────────────────────────────
+// ─── AI TUTOR ──────────────────────────────────────────
 exports.chatTutor = async (req, res) => {
   try {
-    const { question, context } = req.body;
+    const { message, courseTitle } = req.body;
     
-    // Fallback logic for AI Tutor
-    const result = "The AI Tutor is currently in maintenance mode. Please refer to the lesson materials for answers to: '" + (question || "your question") + "'.";
-    return res.json({ result, answer: result });
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: `You are an AI tutor helping a student learn ${courseTitle || 'this course'}. Explain clearly with examples.`
+        },
+        {
+          role: "user",
+          content: message
+        }
+      ],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const reply = completion.choices[0]?.message?.content || "I'm sorry, I couldn't process that.";
+    return res.json({ reply, answer: reply });
   } catch (err) {
-    console.error("AI ERROR (Tutor):", err.message);
-    return res.json({
-      result: "AI Tutor temporarily unavailable.",
+    console.error("GROQ ERROR (Tutor):", err.message);
+    return res.status(500).json({
+      reply: "AI Tutor temporarily unavailable.",
       answer: "AI Tutor temporarily unavailable."
     });
   }
@@ -40,21 +65,60 @@ exports.chatTutor = async (req, res) => {
 
 // ─── QUIZ ────────────────────────────────────────────────
 exports.generateQuiz = async (req, res) => {
-  const fallbackQuiz = [
-    {
-      question: "What is the primary focus of this lesson?",
-      options: ["Core concepts", "History", "Applications", "Summary"],
-      answer: "Core concepts"
-    }
-  ];
-
   try {
-    const { title } = req.body;
-    // Always return fallback for now
-    return res.json({ quiz: fallbackQuiz });
+    const { topic } = req.body;
+    
+    const prompt = `Generate 5 multiple choice questions for the topic: ${topic || 'educational content'}.
+Each question must have:
+- question
+- 4 options
+- correct answer index (0-3)
+
+Return ONLY a valid JSON array of objects with the following format:
+[
+  {
+    "question": "...",
+    "options": ["A", "B", "C", "D"],
+    "answer": 2
+  }
+]`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    let quizContent = completion.choices[0]?.message?.content;
+    
+    // Safety check for JSON parsing
+    let quiz;
+    try {
+      const parsed = JSON.parse(quizContent);
+      // Groq might wrap it in an object if forced to json_object
+      quiz = Array.isArray(parsed) ? parsed : (parsed.quiz || parsed.questions || Object.values(parsed)[0]);
+      if (!Array.isArray(quiz)) throw new Error("Not an array");
+    } catch (e) {
+      console.error("JSON Parse Error for Quiz:", e);
+      // Fallback if parsing fails
+      quiz = [
+        {
+          question: "What is the primary focus of this topic?",
+          options: ["Option A", "Option B", "Option C", "Option D"],
+          answer: 0
+        }
+      ];
+    }
+
+    return res.json({ quiz });
   } catch (err) {
-    console.error("AI ERROR (Quiz):", err.message);
-    return res.json({ quiz: fallbackQuiz });
+    console.error("GROQ ERROR (Quiz):", err.message);
+    return res.status(500).json({ quiz: [] });
   }
 };
 
@@ -77,7 +141,6 @@ exports.getRecommendations = async (req, res) => {
 
     if (unstartedSubjects.length === 0) return res.json({ recommendations: [] });
 
-    // Fallback: return first 2 available subjects
     const finalRecs = unstartedSubjects.slice(0, 2);
     return res.json({ recommendations: finalRecs });
   } catch (err) {
@@ -101,7 +164,6 @@ exports.searchLessons = async (req, res) => {
 
     if (allVideos.length === 0) return res.json({ results: [] });
 
-    // Fallback: basic text search
     const queryLower = query.toLowerCase();
     const results = allVideos.filter(v => 
       v.title.toLowerCase().includes(queryLower) || 

@@ -86,8 +86,8 @@ export function AITutor({ subjectTitle }: { subjectTitle: string }) {
     setLoading(true);
 
     try {
-      const res = await api.post('/ai/chat', { question: userMsg, context: subjectTitle });
-      const answer = res.data.answer;
+      const res = await api.post('/ai/tutor', { message: userMsg, courseTitle: subjectTitle });
+      const answer = res.data.reply || res.data.answer;
       setMessages(prev => [...prev, { role: 'assistant', content: answer }]);
       speak(answer); // Read aloud
     } catch (error) {
