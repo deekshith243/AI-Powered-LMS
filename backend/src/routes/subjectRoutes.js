@@ -1,4 +1,6 @@
+const express = require('express');
 const { getSubjects, getSubjectDetails, getSubjectTree, checkAccess } = require('../controllers/subjectController');
+const authMiddleware = require('../middlewares/authMiddleware');
 const optionalAuth = require('../middlewares/optionalAuthMiddleware');
 
 const router = express.Router();
