@@ -61,15 +61,24 @@ export default function ATSAnalyzer() {
     }
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!targetRole || !resumeText) return setError('Please enter target role and resume text.');
     setLoading(true);
     setError('');
+    
+    console.log("--- ATS Analysis ---");
+    console.log("Target Role:", targetRole);
+    console.log("Resume Text Length:", resumeText.length);
+    console.log("Endpoint: /api/ai/ats");
+
     try {
       const res = await api.post('/ai/ats', { resumeText, targetRole });
+      console.log("ATS Response:", res.data);
       setStats(res.data);
-    } catch (err) {
-      setError('Analysis failed. Please try again.');
+    } catch (err: any) {
+      console.error("ATS Error:", err);
+      setError(err.response?.data?.message || 'Analysis failed. Please try again.');
     } finally {
       setLoading(false);
     }

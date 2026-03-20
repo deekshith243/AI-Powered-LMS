@@ -38,20 +38,32 @@ export default function MockInterview() {
     return () => clearInterval(timer);
   }, [isInterviewActive, timeLeft, evaluation]);
 
-  const handleStart = async () => {
-    if (!role) return setError('Please enter a role for the interview.');
+  const handleStart = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!role) {
+      alert("Please enter a target role");
+      return setError('Please enter a role for the interview.');
+    }
+    
     setLoading(true);
     setError('');
+    
+    console.log("--- Starting Mock Interview ---");
+    console.log("Target Role:", role);
+    console.log("Endpoint: /api/ai/interview/start");
+
     try {
       const res = await api.post('/ai/interview/start', { role });
+      console.log("Interview Questions received:", res.data.questions);
       setQuestions(res.data.questions);
       setAnswers(new Array(res.data.questions.length).fill(''));
       setIsInterviewActive(true);
       setCurrentStep(0);
       setTimeLeft(300);
       setEvaluation(null);
-    } catch (err) {
-      setError('Failed to start interview. Try again.');
+    } catch (err: any) {
+      console.error("Interview Start Error:", err);
+      setError(err.response?.data?.message || 'Failed to start interview. Try again.');
     } finally {
       setLoading(false);
     }
@@ -73,15 +85,23 @@ export default function MockInterview() {
   const handleFinish = async () => {
     setEvaluating(true);
     setIsInterviewActive(false);
+    
+    console.log("--- Evaluating Interview ---");
+    console.log("Role:", role);
+    console.log("Answers:", answers);
+    console.log("Endpoint: /api/ai/interview/evaluate");
+
     try {
       const res = await api.post('/ai/interview/evaluate', { 
         role, 
         questions, 
         userAnswers: answers 
       });
+      console.log("Evaluation Result:", res.data);
       setEvaluation(res.data);
-    } catch (err) {
-      setError('Evaluation failed.');
+    } catch (err: any) {
+      console.error("Evaluation Error:", err);
+      setError(err.response?.data?.message || 'Evaluation failed.');
     } finally {
       setEvaluating(false);
     }

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://lms-backend-prod-3935.onrender.com/api',
 });
 
 // Request interceptor to add the auth token to headers

@@ -16,15 +16,33 @@ export default function ResumeGenerator() {
   // Debug log for role
   console.log("Resume Role:", role);
 
-  const handleGenerate = async () => {
-    if (!role) return setError('Please enter a target role.');
+  const handleGenerate = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!role) {
+      alert("Please enter a target role");
+      return setError('Please enter a target role.');
+    }
+    
     setLoading(true);
     setError('');
+    
+    console.log("--- Generating Resume ---");
+    console.log("Target Role:", role);
+    console.log("User Name:", name);
+    console.log("Skills:", skills);
+    console.log("Endpoint: /api/ai/resume");
+
     try {
-      const res = await api.post('/ai/resume', { role, name, skills });
+      const res = await api.post('/ai/resume', { 
+        role, 
+        name, 
+        skills 
+      });
+      console.log("API Response received:", res.data);
       setResume(res.data.resume);
     } catch (err: any) {
-      setError('Failed to generate resume. Please try again.');
+      console.error("API Error generating resume:", err);
+      setError(err.response?.data?.message || 'Failed to generate resume. Please try again.');
     } finally {
       setLoading(false);
     }
