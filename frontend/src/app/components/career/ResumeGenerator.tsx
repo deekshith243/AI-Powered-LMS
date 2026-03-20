@@ -109,10 +109,10 @@ export default function ResumeGenerator() {
       </div>
 
       {resume && (
-        <div className="premium-card p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="premium-card p-6 rounded-2xl bg-gray-50 border border-gray-200 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-emerald-400" />
+            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-emerald-600" />
               Generated Resume
             </h3>
             <button
@@ -124,7 +124,7 @@ export default function ResumeGenerator() {
             </button>
           </div>
           <div className="prose prose-invert max-w-none">
-            <pre className="whitespace-pre-wrap font-sans text-gray-300 leading-relaxed bg-black/20 p-6 rounded-xl border border-white/5">
+            <pre className="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed bg-white border border-gray-200 p-6 rounded-xl">
               {resume}
             </pre>
           </div>

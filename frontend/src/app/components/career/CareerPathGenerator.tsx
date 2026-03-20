@@ -83,13 +83,13 @@ export default function CareerPathGenerator() {
       </div>
 
       {roadmap && (
-        <div className="premium-card p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+        <div className="premium-card p-6 rounded-2xl bg-gray-50 border border-gray-200 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
             Your Personalized Roadmap
           </h3>
           <div className="prose prose-invert max-w-none">
-            <div className="whitespace-pre-wrap font-sans text-gray-300 leading-relaxed bg-black/20 p-6 rounded-xl border border-white/5">
+            <div className="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed bg-white border border-gray-200 p-6 rounded-xl">
               {roadmap}
             </div>
           </div>

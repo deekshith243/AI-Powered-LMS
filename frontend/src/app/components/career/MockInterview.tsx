@@ -97,10 +97,10 @@ export default function MockInterview() {
     return (
       <div className="premium-card p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl animate-in zoom-in duration-500">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-500/20 text-blue-400 mb-4 border border-blue-500/30">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 text-blue-600 mb-4 border border-blue-200">
             <span className="text-3xl font-bold">{evaluation.score}</span>
           </div>
-          <h2 className="text-2xl font-bold text-white">Interview Performance</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Interview Performance</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -109,20 +109,20 @@ export default function MockInterview() {
               <CheckCircle2 className="w-5 h-5" />
               Strengths
             </h3>
-            <p className="text-sm text-gray-300 leading-relaxed">{evaluation.strengths}</p>
+            <p className="text-sm text-gray-700 leading-relaxed">{evaluation.strengths}</p>
           </div>
-          <div className="space-y-4 p-5 rounded-xl bg-red-500/5 border border-red-500/10">
-            <h3 className="text-red-400 font-semibold flex items-center gap-2">
+          <div className="space-y-4 p-5 rounded-xl bg-red-50 border border-red-100">
+            <h3 className="text-red-600 font-semibold flex items-center gap-2">
               <AlertCircle className="w-5 h-5" />
               Areas for Improvement
             </h3>
-            <p className="text-sm text-gray-300 leading-relaxed">{evaluation.weaknesses}</p>
+            <p className="text-sm text-gray-700 leading-relaxed">{evaluation.weaknesses}</p>
           </div>
         </div>
 
-        <div className="p-6 rounded-xl bg-white/5 border border-white/10 mb-8">
-          <h3 className="text-white font-semibold mb-2">Expert Feedback</h3>
-          <p className="text-sm text-gray-400 leading-relaxed italic">{evaluation.feedback}</p>
+        <div className="p-6 rounded-xl bg-gray-50 border border-gray-100 mb-8">
+          <h3 className="text-gray-900 font-semibold mb-2">Expert Feedback</h3>
+          <p className="text-sm text-gray-600 leading-relaxed italic">{evaluation.feedback}</p>
         </div>
 
         <button
@@ -180,8 +180,8 @@ export default function MockInterview() {
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-white font-semibold">Question {currentStep + 1} of {questions.length}</h3>
-                <p className="text-xs text-gray-400 uppercase tracking-widest">{role}</p>
+                <h3 className="text-gray-900 font-bold">Question {currentStep + 1} of {questions.length}</h3>
+                <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">{role}</p>
               </div>
             </div>
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${timeLeft < 60 ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-white/5 border-white/10 text-gray-400'}`}>
@@ -191,7 +191,7 @@ export default function MockInterview() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-medium text-white leading-relaxed mb-6">
+            <h2 className="text-xl font-bold text-gray-900 leading-relaxed mb-6">
               {questions[currentStep]}
             </h2>
             <textarea

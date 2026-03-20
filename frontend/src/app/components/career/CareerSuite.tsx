@@ -6,15 +6,17 @@ import ResumeGenerator from './ResumeGenerator';
 import ATSAnalyzer from './ATSAnalyzer';
 import MockInterview from './MockInterview';
 import CareerPathGenerator from './CareerPathGenerator';
+import ResumeImprover from './ResumeImprover';
 
 export default function CareerSuite() {
-  const [activeTab, setActiveTab] = useState<'resume' | 'ats' | 'interview' | 'path'>('resume');
+  const [activeTab, setActiveTab] = useState<'resume' | 'ats' | 'improve' | 'interview' | 'path'>('resume');
 
   const tabs = [
-    { id: 'resume', name: 'Resume Builder', icon: FileText, color: 'text-blue-400' },
-    { id: 'path', name: 'Career Roadmap', icon: Briefcase, color: 'text-emerald-400' },
-    { id: 'ats', name: 'ATS Optimizer', icon: ShieldCheck, color: 'text-purple-400' },
-    { id: 'interview', name: 'AI Interview', icon: BrainCircuit, color: 'text-indigo-400' },
+    { id: 'resume', name: 'Resume', icon: FileText, color: 'text-blue-600' },
+    { id: 'ats', name: 'ATS Score', icon: ShieldCheck, color: 'text-purple-600' },
+    { id: 'improve', name: 'Improve Resume', icon: Briefcase, color: 'text-emerald-600' },
+    { id: 'interview', name: 'Interview', icon: BrainCircuit, color: 'text-indigo-600' },
+    { id: 'path', name: 'Career Path', icon: Briefcase, color: 'text-emerald-600' },
   ];
 
   return (
@@ -25,8 +27,8 @@ export default function CareerSuite() {
             <Briefcase className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold text-white tracking-tight">AI Career Suite</h2>
-            <p className="text-gray-400 text-sm">Professional tools to accelerate your career growth</p>
+            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">🚀 AI Career Suite</h2>
+            <p className="text-gray-500 text-sm font-medium">Professional tools to accelerate your career growth</p>
           </div>
         </div>
 
@@ -35,10 +37,10 @@ export default function CareerSuite() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-300 font-medium ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-300 font-bold ${
                 activeTab === tab.id
-                  ? 'bg-white/10 text-white shadow-inner'
-                  : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]'
+                  ? 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
               <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? tab.color : 'text-gray-600'}`} />
@@ -48,12 +50,11 @@ export default function CareerSuite() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 min-h-[600px]">
         {activeTab === 'resume' && <ResumeGenerator />}
-        {activeTab === 'path' && <CareerPathGenerator />}
         {activeTab === 'ats' && <ATSAnalyzer />}
+        {activeTab === 'improve' && <ResumeImprover />}
         {activeTab === 'interview' && <MockInterview />}
-      </div>
+        {activeTab === 'path' && <CareerPathGenerator />}
     </section>
   );
 }

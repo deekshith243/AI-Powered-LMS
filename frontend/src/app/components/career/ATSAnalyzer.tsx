@@ -147,69 +147,51 @@ export default function ATSAnalyzer() {
       </div>
 
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="md:col-span-1 premium-card p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col items-center justify-center text-center">
-            <div className="relative w-32 h-32 mb-4 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="64"
-                  cy="64"
-                  r="58"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="transparent"
-                  className="text-white/5"
-                />
-                <circle
-                  cx="64"
-                  cy="64"
-                  r="58"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="transparent"
-                  strokeDasharray={364.4}
-                  strokeDashoffset={364.4 * (1 - stats.score / 100)}
-                  className="text-purple-500 transition-all duration-1000 ease-out"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span className="text-3xl font-bold text-white">{stats.score}%</span>
-                <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">ATS Score</span>
-              </div>
+        <div className="premium-card p-6 rounded-2xl bg-gray-50 border border-gray-100 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <ShieldCheck className="w-6 h-6 text-purple-600" />
+              ATS Analysis Result
+            </h3>
+            <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-xl border border-purple-100 shadow-sm">
+              <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Score</span>
+              <span className="text-3xl font-extrabold text-purple-600">{stats.score}</span>
             </div>
           </div>
 
-          <div className="md:col-span-2 premium-card p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-               <AlertCircle className="w-5 h-5 text-pink-400" />
-               Key Improvements
-            </h3>
-            <ul className="space-y-2">
-              {stats.suggestions.map((s, i) => (
-                <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4 p-5 rounded-xl bg-emerald-50 border border-emerald-100">
+              <h4 className="text-emerald-700 font-bold flex items-center gap-2 text-sm">
+                <CheckCircle2 className="w-4 h-4" />
+                Key Suggestions
+              </h4>
+              <ul className="space-y-2">
+                {stats.suggestions.map((s: string, i: number) => (
+                  <li key={i} className="text-xs text-gray-700 flex items-start gap-2 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          <div className="md:col-span-3 premium-card p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Search className="w-5 h-5 text-blue-400" />
-              Missing Keywords & Skills
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {stats.missing_skills.map((s, i) => (
-                <span key={i} className="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium">
-                  {s}
-                </span>
-              ))}
-              {stats.required_skills.map((s, i) => (
-                <span key={i} className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium">
-                  {s}
-                </span>
-              ))}
+            <div className="space-y-4 p-5 rounded-xl bg-purple-50 border border-purple-100">
+              <h4 className="text-purple-700 font-bold flex items-center gap-2 text-sm">
+                <AlertCircle className="w-4 h-4" />
+                Missing Critical Skills
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {stats.missing_skills.map((skill: string, i: number) => (
+                  <span key={i} className="px-3 py-1 bg-white text-purple-700 border border-purple-200 rounded-full text-xs font-bold shadow-sm">
+                    {skill}
+                  </span>
+                ))}
+                {stats.required_skills.map((s, i) => (
+                  <span key={i} className="px-3 py-1 bg-white text-blue-700 border border-blue-200 rounded-full text-xs font-bold shadow-sm">
+                    {s}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
