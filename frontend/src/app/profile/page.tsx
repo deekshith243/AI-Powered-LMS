@@ -4,8 +4,15 @@ import { useEffect, useState } from 'react';
 import api from '../../lib/api';
 import { Skeleton } from '../components/ui/Skeleton';
 import Link from 'next/link';
-import { BookOpen, AlertCircle, Sparkles, Download, BarChart2, Award, Zap, Eye, BrainCircuit, ChevronRight } from 'lucide-react';
+import { BookOpen, AlertCircle, Sparkles, Download, BarChart2, Award, Zap, Eye, BrainCircuit, ChevronRight, Briefcase, FileText, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+
+// AI Career Suite Components
+import ResumeGenerator from '../components/career/ResumeGenerator';
+import ATSAnalyzer from '../components/career/ATSAnalyzer';
+import ResumeImprover from '../components/career/ResumeImprover';
+import MockInterview from '../components/career/MockInterview';
+import CareerPathGenerator from '../components/career/CareerPathGenerator';
 
 interface UserProfile {
   name: string;
@@ -35,14 +42,11 @@ export default function Profile() {
   const [recLoading, setRecLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloadingCert, setDownloadingCert] = useState<number | null>(null);
-
-  // Career Path States
-  const [careerGoal, setCareerGoal] = useState('');
-  const [careerRoadmap, setCareerRoadmap] = useState('');
-  const [loadingCareer, setLoadingCareer] = useState(false);
+  const [activeTab, setActiveTab] = useState('resume');
 
   useEffect(() => {
     const fetchProfile = async () => {
+      console.log("Dashboard loaded");
       try {
         const res = await api.get('/users/profile');
         setUser(res.data.user);
@@ -93,21 +97,6 @@ export default function Profile() {
      } finally {
        setDownloadingCert(null);
      }
-  };
-
-  const generateCareerPath = async () => {
-    if (!careerGoal.trim()) return;
-    setLoadingCareer(true);
-    setCareerRoadmap('');
-    try {
-      const res = await api.post('/ai/career', { goal: careerGoal });
-      setCareerRoadmap(res.data.roadmap);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to generate career path.');
-    } finally {
-      setLoadingCareer(false);
-    }
   };
 
   if (loading) {
@@ -234,6 +223,70 @@ export default function Profile() {
          </div>
       </div>
 
+      {/* 🚀 AI Career Suite Section */}
+      <section className="mt-16 animate-fade-in">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+            <Briefcase className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">🚀 AI Career Suite</h2>
+            <p className="text-gray-500 text-sm">Professional tools to accelerate your career growth</p>
+          </div>
+        </div>
+
+        {/* Tab System */}
+        <div className="flex flex-wrap gap-3 mb-8 p-1 bg-gray-50 rounded-2xl border border-gray-100">
+          <button 
+            onClick={() => setActiveTab("resume")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'resume' ? 'bg-white text-blue-600 shadow-sm border border-blue-100' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <FileText className="w-4 h-4" />
+            Resume
+          </button>
+          <button 
+            onClick={() => setActiveTab("ats")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'ats' ? 'bg-white text-purple-600 shadow-sm border border-purple-100' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            ATS Score
+          </button>
+          <button 
+            onClick={() => setActiveTab("improve")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'improve' ? 'bg-white text-emerald-600 shadow-sm border border-emerald-100' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <Briefcase className="w-4 h-4" />
+            Improve
+          </button>
+          <button 
+            onClick={() => setActiveTab("interview")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'interview' ? 'bg-white text-indigo-600 shadow-sm border border-indigo-100' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <BrainCircuit className="w-4 h-4" />
+            Interview
+          </button>
+          <button 
+            onClick={() => setActiveTab("career")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'career' ? 'bg-white text-emerald-600 shadow-sm border border-emerald-100' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <Briefcase className="w-4 h-4" />
+            Career Path
+          </button>
+        </div>
+
+        {/* Debug Text */}
+        <p className="text-xs text-gray-400 mb-4 ml-2">Active Tab: {activeTab}</p>
+
+        {/* Component Rendering */}
+        <div className="mt-4 transition-all duration-500">
+          {activeTab === "resume" && <ResumeGenerator />}
+          {activeTab === "ats" && <ATSAnalyzer />}
+          {activeTab === "improve" && <ResumeImprover />}
+          {activeTab === "interview" && <MockInterview />}
+          {activeTab === "career" && <CareerPathGenerator />}
+        </div>
+      </section>
+
       {/* Enrolled Subjects */}
       <div>
         <h3 className="text-2xl font-bold text-gray-900 mb-6">Continue Learning</h3>
@@ -311,74 +364,34 @@ export default function Profile() {
       </div>
 
       {/* AI Recommendations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-16">
-         {/* Career Path Generator */}
-         <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 p-8 shadow-sm flex flex-col premium-card">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center text-orange-800">
-               <BrainCircuit className="w-6 h-6 mr-3 text-orange-600" />
-               AI Career Path Generator
-            </h3>
-            <p className="text-sm text-orange-800/70 mb-6">Enter your professional goal, and our AI will chart a learning path for you.</p>
-            
-            <div className="flex space-x-2 mb-6">
-               <input 
-                  type="text" 
-                  placeholder="e.g. Full Stack Developer, Data Scientist..."
-                  className="flex-1 px-4 py-3 rounded-xl border border-orange-200 outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
-                  value={careerGoal}
-                  onChange={(e) => setCareerGoal(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && generateCareerPath()}
-               />
-               <button 
-                  onClick={generateCareerPath}
-                  disabled={loadingCareer || !careerGoal.trim()}
-                  className="px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition shadow-md disabled:opacity-50"
-               >
-                  {loadingCareer ? 'Thinking...' : 'Generate'}
-               </button>
+      <div className="mt-16 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-8 shadow-sm premium-card animate-fade-in mb-12">
+         <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <Sparkles className="w-6 h-6 mr-3 text-indigo-600" />
+            AI Recommended For You
+         </h3>
+         
+         {recLoading ? (
+            <div className="space-y-4">
+               <Skeleton className="h-24 w-full" />
+               <Skeleton className="h-24 w-full" />
             </div>
-
-            {careerRoadmap && (
-               <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl border border-white max-h-[400px] overflow-y-auto animate-fade-in custom-scrollbar">
-                  <div className="prose prose-sm prose-orange max-w-none">
-                     <div className="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">
-                        {careerRoadmap}
-                     </div>
-                  </div>
-               </div>
-            )}
-         </div>
-
-         {/* Recommendations */}
-         <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-8 shadow-sm premium-card">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-               <Sparkles className="w-6 h-6 mr-3 text-indigo-600" />
-               AI Recommended For You
-            </h3>
-            
-            {recLoading ? (
-               <div className="space-y-4">
-                  <Skeleton className="h-24 w-full" />
-                  <Skeleton className="h-24 w-full" />
-               </div>
-            ) : recommendations.length === 0 ? (
-               <p className="text-gray-500">You've started all available courses! Check back later for new content.</p>
-            ) : (
-               <div className="space-y-4">
-                  {recommendations.map(rec => (
-                     <Link href={`/learn/${rec.id}`} key={rec.id}>
-                        <div className="bg-white rounded-xl shadow-sm border border-indigo-100 p-5 hover:shadow-md transition group">
-                           <div className="flex items-center justify-between">
-                              <h4 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{rec.title}</h4>
-                              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
-                           </div>
-                           <p className="text-xs text-gray-500 mt-1 line-clamp-1">{rec.description}</p>
+         ) : recommendations.length === 0 ? (
+            <p className="text-gray-500">You've started all available courses! Check back later for new content.</p>
+         ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {recommendations.map(rec => (
+                  <Link href={`/learn/${rec.id}`} key={rec.id}>
+                     <div className="bg-white rounded-xl shadow-sm border border-indigo-100 p-5 hover:shadow-md transition group">
+                        <div className="flex items-center justify-between">
+                           <h4 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{rec.title}</h4>
+                           <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
                         </div>
-                     </Link>
-                  ))}
-               </div>
-            )}
-         </div>
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">{rec.description}</p>
+                     </div>
+                  </Link>
+               ))}
+            </div>
+         )}
       </div>
     </div>
   );
