@@ -135,25 +135,7 @@ export default function Profile() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight mb-8">My Dashboard</h1>
 
-      {/* 🚀 AI Career Suite - FORCED TOP VISIBILITY */}
-      <div key={activeTab} className="mb-12 p-8 bg-white rounded-2xl border-4 border-indigo-500 shadow-2xl">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">🚀 AI Career Suite</h2>
-        <div className="flex flex-wrap gap-4 mb-6">
-          <button onClick={() => setActiveTab("resume")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'resume' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-200'}`}>Resume</button>
-          <button onClick={() => setActiveTab("ats")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'ats' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-200'}`}>ATS</button>
-          <button onClick={() => setActiveTab("improve")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'improve' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-200'}`}>Improve</button>
-          <button onClick={() => setActiveTab("interview")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'interview' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-200'}`}>Interview</button>
-          <button onClick={() => setActiveTab("career")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'career' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-200'}`}>Career</button>
-        </div>
-        <p className="text-lg font-bold text-indigo-600 mb-6">Active Tab: {activeTab}</p>
-        <div className="min-h-[200px] border-t border-gray-100 pt-6">
-          {activeTab === "resume" && <ResumeGenerator />}
-          {activeTab === "ats" && <ATSAnalyzer />}
-          {activeTab === "improve" && <ResumeImprover />}
-          {activeTab === "interview" && <MockInterview />}
-          {activeTab === "career" && <CareerPathGenerator />}
-        </div>
-      </div>
+
 
       {/* Personal Info */}
       <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-8 flex items-center justify-between">
@@ -320,6 +302,28 @@ export default function Profile() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* 🚀 AI Career Suite Section */}
+      <div id="ai-career-suite" key={activeTab} className="mt-16 mb-12 p-8 bg-white rounded-2xl border-4 border-indigo-500 shadow-2xl animate-fade-in">
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">🚀 AI Career Suite</h2>
+        <div className="flex flex-wrap gap-4 mb-6">
+          <button onClick={() => setActiveTab("resume")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'resume' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>Resume</button>
+          <button onClick={() => setActiveTab("ats")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'ats' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>ATS Score</button>
+          <button onClick={() => setActiveTab("improve")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'improve' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>Improve Resume</button>
+          <button onClick={() => setActiveTab("interview")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'interview' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>Mock Interview</button>
+          <button onClick={() => setActiveTab("career")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'career' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>Career Path</button>
+        </div>
+        
+        <p className="text-lg font-bold text-indigo-600 mb-6">Active Tab: {activeTab}</p>
+        
+        <div className="min-h-[300px] border-t border-gray-100 pt-8">
+          {activeTab === "resume" && <ResumeGenerator />}
+          {activeTab === "ats" && <ATSAnalyzer />}
+          {activeTab === "improve" && <ResumeImprover />}
+          {activeTab === "interview" && <MockInterview />}
+          {activeTab === "career" && <CareerPathGenerator />}
+        </div>
       </div>
 
       {/* AI Recommendations */}
