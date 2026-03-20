@@ -1,4 +1,5 @@
 'use client';
+// Force redeploy - AI Career Suite Visibility Fix
 
 import { useEffect, useState } from 'react';
 import api from '../../lib/api';
