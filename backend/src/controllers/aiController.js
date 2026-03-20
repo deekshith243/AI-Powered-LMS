@@ -37,6 +37,11 @@ exports.generateSummary = async (req, res) => {
 exports.chatTutor = async (req, res) => {
   try {
     const { message, courseTitle } = req.body;
+    console.log("AI TUTOR REQUEST:", { message, courseTitle });
+    
+    if (!process.env.GROQ_API_KEY) {
+      console.error("CRITICAL: GROQ_API_KEY is missing in environment!");
+    }
     
     const completion = await groq.chat.completions.create({
       messages: [
