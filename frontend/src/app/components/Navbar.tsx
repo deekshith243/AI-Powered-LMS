@@ -129,7 +129,14 @@ export default function Navbar() {
                   </div>
                )}
             </div>
-            
+
+            <button
+              onClick={() => router.push("/placements")}
+              className="mr-2 px-4 py-1.5 text-sm font-bold text-white bg-purple-600 rounded-full hover:bg-purple-700 transition shadow-md shadow-purple-100"
+            >
+              Placements
+            </button>
+
             {isAuthenticated && (
               <button
                 onClick={() => router.push("/profile")}
@@ -197,6 +204,13 @@ export default function Navbar() {
                 className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-indigo-500"
               >
                 My Profile
+              </Link>
+              <Link 
+                href="/placements"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-purple-500"
+              >
+                Placements
               </Link>
               <button
                 onClick={handleLogout}
