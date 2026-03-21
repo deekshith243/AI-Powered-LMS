@@ -230,3 +230,127 @@ exports.searchLessons = async (req, res) => {
     return res.json({ results: [] });
   }
 };
+
+// ─── RESUME GENERATOR ────────────────────────────────────
+exports.generateResume = async (req, res) => {
+  try {
+    const { role, name, skills } = req.body;
+    const prompt = `Generate a professional resume for a ${role}. 
+Name: ${name || 'N/A'}
+Skills: ${skills || 'N/A'}
+Provide a structured, clean resume in plain text.`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const resume = completion.choices[0]?.message?.content || "Resume generation failed.";
+    return res.json({ resume });
+  } catch (err) {
+    console.error("GROQ ERROR (Resume):", err.message);
+    return res.status(500).json({ resume: "Failed to generate resume." });
+  }
+};
+
+// ─── ATS ANALYZER ───────────────────────────────────────
+exports.analyzeATS = async (req, res) => {
+  try {
+    const { resumeText, targetRole } = req.body;
+    const prompt = `Analyze this resume for the role of ${targetRole}.
+Resume Content: ${resumeText}
+
+Return ONLY a valid JSON object:
+{
+  "score": 85,
+  "missing_skills": ["Skill 1", "Skill 2"],
+  "suggestions": ["Suggestion 1"],
+  "required_skills": ["Skill A"]
+}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    const stats = JSON.parse(completion.choices[0]?.message?.content);
+    return res.json(stats);
+  } catch (err) {
+    console.error("GROQ ERROR (ATS):", err.message);
+    return res.status(500).json({ score: 0, missing_skills: [], suggestions: [], required_skills: [] });
+  }
+};
+
+// ─── RESUME IMPROVER ─────────────────────────────────────
+exports.improveResume = async (req, res) => {
+  try {
+    const { resumeText, targetRole } = req.body;
+    const prompt = `Improve this resume for the role of ${targetRole}. 
+Optimize keywords and professional tone.
+Resume: ${resumeText}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const improved = completion.choices[0]?.message?.content || "Resume improvement failed.";
+    return res.json({ improved_resume: improved });
+  } catch (err) {
+    console.error("GROQ ERROR (Improve):", err.message);
+    return res.status(500).json({ improved_resume: "Failed to improve resume." });
+  }
+};
+
+// ─── MOCK INTERVIEW START ──────────────────────────────
+exports.startInterview = async (req, res) => {
+  try {
+    const { role } = req.body;
+    const prompt = `Generate 5 technical interview questions for a ${role} position. 
+Return ONLY a valid JSON array of strings: ["Question 1", "Question 2", ...]`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    const parsed = JSON.parse(completion.choices[0]?.message?.content);
+    const questions = Array.isArray(parsed) ? parsed : (parsed.questions || Object.values(parsed)[0]);
+    return res.json({ questions });
+  } catch (err) {
+    console.error("GROQ ERROR (Interview Start):", err.message);
+    return res.status(500).json({ questions: ["Tell me about your experience.", "What are your core technical skills?"] });
+  }
+};
+
+// ─── MOCK INTERVIEW EVALUATE ───────────────────────────
+exports.evaluateInterview = async (req, res) => {
+  try {
+    const { role, questions, userAnswers } = req.body;
+    const prompt = `Evaluate these interview answers for a ${role} role.
+Questions: ${JSON.stringify(questions)}
+Answers: ${JSON.stringify(userAnswers)}
+
+Return ONLY a valid JSON object:
+{
+  "score": 75,
+  "strengths": "...",
+  "weaknesses": "...",
+  "feedback": "..."
+}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    const evaluation = JSON.parse(completion.choices[0]?.message?.content);
+    return res.json(evaluation);
+  } catch (err) {
+    console.error("GROQ ERROR (Evaluate):", err.message);
+    return res.status(500).json({ score: 0, feedback: "Evaluation failed." });
+  }
+};
