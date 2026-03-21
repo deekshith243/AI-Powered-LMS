@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { FileText, ShieldCheck, BrainCircuit, Briefcase } from 'lucide-react';
 import ResumeGenerator from './ResumeGenerator';
 import ATSAnalyzer from './ATSAnalyzer';
@@ -9,23 +9,36 @@ import MockInterview from './MockInterview';
 import CareerPathGenerator from './CareerPathGenerator';
 import ResumeImprover from './ResumeImprover';
 
+import { aiCareerRoutes } from '@/config/aiCareerRoutes';
+
 export default function CareerSuite() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'resume' | 'ats' | 'improve' | 'interview' | 'path'>('resume');
 
   React.useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab && ['resume', 'ats', 'improve', 'interview', 'path'].includes(tab)) {
-      setActiveTab(tab as any);
+    // Check pathname first
+    if (pathname.includes('/dashboard/resume')) setActiveTab('resume');
+    else if (pathname.includes('/dashboard/ats')) setActiveTab('ats');
+    else if (pathname.includes('/dashboard/improve')) setActiveTab('improve');
+    else if (pathname.includes('/dashboard/mock')) setActiveTab('interview');
+    else if (pathname.includes('/dashboard/career-path')) setActiveTab('path');
+    else {
+      // Fallback to search params for backward compatibility
+      const tab = searchParams.get('tab');
+      if (tab && ['resume', 'ats', 'improve', 'interview', 'path'].includes(tab)) {
+        setActiveTab(tab as any);
+      }
     }
-  }, [searchParams]);
+  }, [pathname, searchParams]);
 
   const tabs = [
-    { id: 'resume', name: 'Resume', icon: FileText, color: 'text-blue-600' },
-    { id: 'ats', name: 'ATS Score', icon: ShieldCheck, color: 'text-purple-600' },
-    { id: 'improve', name: 'Improve Resume', icon: Briefcase, color: 'text-emerald-600' },
-    { id: 'interview', name: 'Interview', icon: BrainCircuit, color: 'text-indigo-600' },
-    { id: 'path', name: 'Career Path', icon: Briefcase, color: 'text-emerald-600' },
+    { id: 'resume', name: 'Resume', icon: FileText, color: 'text-blue-600', route: aiCareerRoutes.resume },
+    { id: 'ats', name: 'ATS Score', icon: ShieldCheck, color: 'text-purple-600', route: aiCareerRoutes.ats },
+    { id: 'improve', name: 'Improve Resume', icon: Briefcase, color: 'text-emerald-600', route: aiCareerRoutes.improve },
+    { id: 'interview', name: 'Interview', icon: BrainCircuit, color: 'text-indigo-600', route: aiCareerRoutes.mock },
+    { id: 'path', name: 'Career Path', icon: Briefcase, color: 'text-emerald-600', route: aiCareerRoutes.career },
   ];
 
   return (
@@ -45,7 +58,7 @@ export default function CareerSuite() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => router.push(tab.route)}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-300 font-bold ${
                 activeTab === tab.id
                   ? 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100'

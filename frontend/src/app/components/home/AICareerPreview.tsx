@@ -4,6 +4,8 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, ShieldCheck, Zap, BrainCircuit, Briefcase, ChevronRight } from 'lucide-react';
 
+import { aiCareerRoutes } from "@/config/aiCareerRoutes";
+
 const AICareerPreview = () => {
   const router = useRouter();
 
@@ -14,7 +16,7 @@ const AICareerPreview = () => {
       icon: FileText,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-      tab: "resume"
+      route: aiCareerRoutes.resume
     },
     {
       title: "ATS Score Checker",
@@ -22,7 +24,7 @@ const AICareerPreview = () => {
       icon: ShieldCheck,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
-      tab: "ats"
+      route: aiCareerRoutes.ats
     },
     {
       title: "Improve Resume",
@@ -30,7 +32,7 @@ const AICareerPreview = () => {
       icon: Zap,
       color: "text-emerald-600",
       bgColor: "bg-emerald-50",
-      tab: "improve"
+      route: aiCareerRoutes.improve
     },
     {
       title: "Mock Interview",
@@ -38,7 +40,7 @@ const AICareerPreview = () => {
       icon: BrainCircuit,
       color: "text-indigo-600",
       bgColor: "bg-indigo-50",
-      tab: "interview"
+      route: aiCareerRoutes.mock
     },
     {
       title: "Career Path",
@@ -46,9 +48,18 @@ const AICareerPreview = () => {
       icon: Briefcase,
       color: "text-amber-600",
       bgColor: "bg-amber-50",
-      tab: "career"
+      route: aiCareerRoutes.career
     }
   ];
+
+  const handleNavigate = (route: string) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      router.push("/login");
+    } else {
+      router.push(route);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -80,7 +91,7 @@ const AICareerPreview = () => {
               <p className="text-gray-500 text-sm leading-relaxed mb-8 flex-1">{card.description}</p>
               
               <button 
-                onClick={() => router.push(`/dashboard?tab=${card.tab}`)}
+                onClick={() => handleNavigate(card.route)}
                 className={`flex items-center gap-2 font-bold text-sm ${card.color} hover:gap-3 transition-all`}
               >
                 Try Now

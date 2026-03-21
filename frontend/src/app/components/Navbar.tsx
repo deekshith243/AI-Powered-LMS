@@ -132,7 +132,7 @@ export default function Navbar() {
             
             {isAuthenticated && (
               <button
-                onClick={() => router.push("/subjects")}
+                onClick={() => router.push("/profile")}
                 className="hidden md:flex items-center px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition shadow-md shadow-indigo-100 mr-2"
               >
                 Dashboard
