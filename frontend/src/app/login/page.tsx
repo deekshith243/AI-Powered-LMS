@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../lib/api';
@@ -13,6 +13,13 @@ export default function Login() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
 
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      router.push("/");
+    }
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -20,7 +27,7 @@ export default function Login() {
     try {
       const res = await api.post('/auth/login', { email, password });
       login(res.data.user, res.data.accessToken, res.data.refreshToken);
-      router.push('/subjects');
+      router.push('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
     }

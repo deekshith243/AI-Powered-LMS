@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../lib/api';
@@ -14,6 +14,13 @@ export default function Register() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
 
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      router.push("/");
+    }
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -21,7 +28,7 @@ export default function Register() {
     try {
       const res = await api.post('/auth/register', { name, email, password });
       login(res.data.user, res.data.accessToken, res.data.refreshToken);
-      router.push('/subjects');
+      router.push('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed');
     }

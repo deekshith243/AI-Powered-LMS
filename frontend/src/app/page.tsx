@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { BookOpen, Sparkles, ChevronRight, GraduationCap, Trophy } from 'lucide-react';
+import { BookOpen, Sparkles, ChevronRight, GraduationCap, Trophy, Loader2 } from 'lucide-react';
 import api from '../lib/api';
-import AIRecommended from './components/ai/AIRecommended';
 import { Skeleton } from './components/ui/Skeleton';
+import { useAuthStore } from '../store/authStore';
 
 import AICareerPreview from './components/home/AICareerPreview';
 
@@ -14,18 +15,44 @@ export default function Home() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCareerSuite, setShowCareerSuite] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   const categories = [
     "All", "Python", "Artificial Intelligence", "Machine Learning", 
     "Java", "Web Development", "Data Science"
   ];
 
+  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+
   useEffect(() => {
-    api.get('/subjects').then(res => {
-      setSubjects(res.data.slice(0, 6)); // Show top 6
-    }).catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      router.push("/login");
+    } else {
+      setIsAuthChecking(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (!isAuthChecking) {
+      api.get('/subjects').then(res => {
+        setSubjects(res.data.slice(0, 6)); // Show top 6
+      }).catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [isAuthChecking]);
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+          <p className="text-gray-500 font-medium animate-pulse">Loading your experience...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen">
@@ -51,18 +78,13 @@ export default function Home() {
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
-              <Link
-                href="/register"
-                className="w-full sm:w-auto px-10 py-4 text-lg font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all hover:-translate-y-1"
+              <button
+                onClick={() => router.push("/subjects")}
+                className="w-full sm:w-auto px-12 py-4 text-xl font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-2xl shadow-indigo-100 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2"
               >
-                Get Started Free
-              </Link>
-              <Link
-                href="/login"
-                className="w-full sm:w-auto px-10 py-4 text-lg font-bold rounded-2xl text-indigo-600 bg-white border-2 border-indigo-50 hover:bg-gray-50 transition-all"
-              >
-                Login to Dashboard
-              </Link>
+                Go to Dashboard
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="mt-12 flex flex-wrap justify-center gap-8 text-gray-400 font-bold text-sm uppercase tracking-widest">
@@ -88,19 +110,18 @@ export default function Home() {
         </div>
 
         {/* Toggle Button for AI Career Suite */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-6">
           <button
             onClick={() => setShowCareerSuite(!showCareerSuite)}
-            className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold shadow-xl shadow-indigo-200 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold shadow-md hover:scale-105 transition"
           >
-            <Sparkles className={`w-5 h-5 ${showCareerSuite ? 'animate-spin' : ''}`} />
             {showCareerSuite ? "Hide AI Career Suite" : "Explore AI Career Suite"}
           </button>
         </div>
 
         {/* 🚀 Expandable AI Career Suite */}
         {showCareerSuite && (
-          <section className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <section className="mt-8 animate-in fade-in slide-in-from-top-4 duration-500">
             <AICareerPreview />
           </section>
         )}

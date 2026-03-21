@@ -129,26 +129,37 @@ export default function Navbar() {
                   </div>
                )}
             </div>
+            
+            {isAuthenticated && (
+              <button
+                onClick={() => router.push("/subjects")}
+                className="hidden md:flex items-center px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition shadow-md shadow-indigo-100 mr-2"
+              >
+                Dashboard
+              </button>
+            )}
 
             {isAuthenticated ? (
               <div className="flex items-center space-x-6">
-                <Link href="/profile" className="flex items-center text-sm font-medium text-gray-700 hover:text-indigo-600 transition">
-                  <User className="w-5 h-5 mr-1.5" />
+                <Link href="/profile" className="flex items-center text-sm font-semibold text-gray-700 hover:text-indigo-600 transition">
+                  <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center mr-2">
+                    <User className="w-4 h-4 text-indigo-600" />
+                  </div>
                   {user?.name}
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-sm font-medium text-gray-500 hover:text-red-600 transition"
+                  className="text-sm font-bold text-gray-400 hover:text-red-500 transition-colors"
                 >
                   Logout
                 </button>
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link href="/login" className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition">
+                <Link href="/login" className="text-sm font-bold text-gray-600 hover:text-indigo-600 transition">
                   Login
                 </Link>
-                <Link href="/register" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition">
+                <Link href="/register" className="inline-flex items-center px-5 py-2 text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-lg shadow-indigo-100">
                   Sign up
                 </Link>
               </div>

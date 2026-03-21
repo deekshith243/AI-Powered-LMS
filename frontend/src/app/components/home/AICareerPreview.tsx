@@ -46,7 +46,7 @@ const AICareerPreview = () => {
       icon: Briefcase,
       color: "text-amber-600",
       bgColor: "bg-amber-50",
-      tab: "path"
+      tab: "career"
     }
   ];
 
@@ -80,7 +80,7 @@ const AICareerPreview = () => {
               <p className="text-gray-500 text-sm leading-relaxed mb-8 flex-1">{card.description}</p>
               
               <button 
-                onClick={() => router.push(`/profile?tab=${card.tab}`)}
+                onClick={() => router.push(`/dashboard?tab=${card.tab}`)}
                 className={`flex items-center gap-2 font-bold text-sm ${card.color} hover:gap-3 transition-all`}
               >
                 Try Now
