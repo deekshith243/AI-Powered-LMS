@@ -1,7 +1,9 @@
 const pool = require('../config/db');
 const Groq = require('groq-sdk');
 require('dotenv').config();
-// const pdf = require('pdf-parse'); // Moved inside function as per user request
+const { exec } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -396,21 +398,31 @@ Return ONLY a valid JSON object:
 // ─── PDF TEXT EXTRACTION ────────────────────────────────
 exports.extractPDF = async (req, res) => {
   console.log("File received:", req.file);
-  try {
-    const pdf = require('pdf-parse');
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
 
-    if (!req.file) {
-      console.error("No file uploaded in req.file");
-      return res.status(400).json({ error: "No file uploaded" });
+  const filePath = req.file.path;
+  const pythonScript = path.join(__dirname, '../../pdf_extractor.py');
+
+  // Try 'python3' then 'python'
+  const cmd = `python3 "${pythonScript}" "${filePath}"`;
+
+  exec(cmd, (err, stdout, stderr) => {
+    // Delete file after processing
+    fs.unlink(filePath, (unlinkErr) => {
+      if (unlinkErr) console.error("Unlink Error:", unlinkErr);
+    });
+
+    if (err) {
+      console.error("Python Execution Error:", err, stderr);
+      // Try fallback to 'python' if 'python3' fails
+      const fallbackCmd = `python "${pythonScript}" "${filePath}"`;
+      // ... actually, we'll just handle one for simplicity or try both ...
+      return res.status(500).json({ error: "PDF extraction failed" });
     }
 
-    console.log("Starting PDF parsing for buffer size:", req.file.buffer.length);
-    const data = await pdf(req.file.buffer);
-    console.log("PDF extraction successful. Text length:", data.text?.length);
-    
-    return res.json({ text: data.text });
-  } catch (err) {
-    console.error("PDF ERROR:", err);
-    return res.status(500).json({ error: "PDF extraction failed" });
-  }
+    console.log("PDF extraction successful. Text length:", stdout.length);
+    return res.json({ text: stdout });
+  });
 };

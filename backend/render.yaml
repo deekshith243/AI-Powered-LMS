@@ -3,7 +3,7 @@ services:
     name: lms-backend
     env: node
     plan: free
-    buildCommand: "npm install"
+    buildCommand: "npm install && pip install pdfplumber"
     startCommand: "npm run start"
     envVars:
       - key: DB_HOST
