@@ -22,6 +22,8 @@ export default function ATSAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [jobDescription, setJobDescription] = useState('');
+  const [isJobMatchMode, setIsJobMatchMode] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,16 +62,18 @@ export default function ATSAnalyzer() {
     setInfo('');
     
     try {
-      const res = await fetch(`${API_URL}/api/ai/ats`, {
+      const endpoint = isJobMatchMode ? '/api/ai/job-match' : '/api/ai/ats';
+      const body = isJobMatchMode 
+        ? { resumeText: finalText, jobDescription } 
+        : { resumeText: finalText, targetRole };
+
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
         },
-        body: JSON.stringify({
-          resumeText: finalText,
-          targetRole
-        })
+        body: JSON.stringify(body)
       });
 
       if (!res.ok) {
@@ -90,26 +94,49 @@ export default function ATSAnalyzer() {
   return (
     <div className="space-y-6">
       <div className="premium-card p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-6 flex items-center gap-2">
-          <ShieldCheck className="w-6 h-6 text-purple-400" />
-          ATS Resume Analyzer
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6 text-purple-400" />
+            {isJobMatchMode ? "AI Job Match Matcher" : "ATS Resume Analyzer"}
+          </h2>
+          <button 
+            onClick={() => {
+              setIsJobMatchMode(!isJobMatchMode);
+              setStats(null);
+            }}
+            className="text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors uppercase tracking-widest px-3 py-1 bg-purple-500/10 rounded-lg border border-purple-500/20"
+          >
+            Switch to {isJobMatchMode ? "ATS Mode" : "Job Match Mode"}
+          </button>
+        </div>
 
         <form onSubmit={(e) => e.preventDefault()} className="space-y-4 mb-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-400">Target Role</label>
-            <input
-              type="text"
-              placeholder="e.g. Senior Backend Engineer"
-              value={targetRole}
-              onChange={(e) => setTargetRole(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium"
-            />
-          </div>
+          {!isJobMatchMode ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-400">Target Role</label>
+              <input
+                type="text"
+                placeholder="e.g. Senior Backend Engineer"
+                value={targetRole}
+                onChange={(e) => setTargetRole(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium"
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-400">Job Description (JD)</label>
+              <textarea
+                placeholder="Paste the Job Description here..."
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 h-32 transition-all text-sm font-sans"
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-400 flex justify-between items-center">
-              Resume Text
+              Your Resume
               <label className="text-xs text-purple-400 cursor-pointer hover:underline flex items-center gap-1">
                 <Upload className="w-3 h-3" />
                 Upload PDF
@@ -119,7 +146,7 @@ export default function ATSAnalyzer() {
             
 
             <textarea
-              placeholder="Paste your resume text here (recommended if PDF upload fails)..."
+              placeholder="Paste your resume text here..."
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 h-32 transition-all text-sm font-mono"
@@ -139,7 +166,7 @@ export default function ATSAnalyzer() {
                         PDF uploaded successfully
                     </div>
                     <div className="text-gray-400 text-[10px] line-clamp-2 italic">
-                        Preview: {extractedText.substring(0, 200)}...
+                        Preview: {extractedText.substring(0, 100)}...
                     </div>
                 </div>
             )}
@@ -155,18 +182,18 @@ export default function ATSAnalyzer() {
 
         <button
           onClick={handleAnalyze}
-          disabled={loading || uploading || !resumeText}
+          disabled={loading || uploading || !resumeText || (isJobMatchMode && !jobDescription)}
           className="premium-button w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Analyzing with AI...
+              {isJobMatchMode ? "Matching Resume..." : "Analyzing with AI..."}
             </>
           ) : (
             <>
-              <TrendingUp className="w-5 h-5" />
-              Check ATS Compatibility
+              {isJobMatchMode ? <ShieldCheck className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
+              {isJobMatchMode ? "Analyze Job Match" : "Check ATS Compatibility"}
             </>
           )}
         </button>

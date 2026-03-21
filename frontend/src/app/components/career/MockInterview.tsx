@@ -29,6 +29,40 @@ export default function MockInterview() {
   console.log("Interview Role:", role);
   console.log("Interview Answer:", currentAnswer);
 
+  const [isRecording, setIsRecording] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        (window as any).startSpeech = (onResult: (text: string) => void) => {
+          recognition.onresult = (event: any) => {
+            const transcript = Array.from(event.results)
+              .map((result: any) => result[0])
+              .map((result: any) => result.transcript)
+              .join('');
+            if (event.results[0].isFinal) {
+              onResult(transcript);
+            }
+          };
+          recognition.start();
+          setIsRecording(true);
+          (window as any).isRecording = true;
+        };
+
+        (window as any).stopSpeech = () => {
+          recognition.stop();
+          setIsRecording(false);
+          (window as any).isRecording = false;
+        };
+      }
+    }
+  }, []);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isInterviewActive && timeLeft > 0 && !evaluation) {
@@ -242,16 +276,37 @@ export default function MockInterview() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 leading-relaxed mb-6">
-              {questions[currentStep]}
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900 leading-relaxed">
+                {questions[currentStep]}
+              </h2>
+              <button
+                onClick={() => {
+                  if (isRecording) {
+                    (window as any).stopSpeech();
+                  } else {
+                    (window as any).startSpeech((text: string) => {
+                      setCurrentAnswer(prev => prev + " " + text);
+                    });
+                  }
+                }}
+                className={`p-3 rounded-xl border transition-all flex items-center gap-2 font-bold text-sm ${
+                  isRecording 
+                    ? 'bg-red-500 text-white border-red-600 animate-pulse' 
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <Mic className={`w-4 h-4 ${isRecording ? 'fill-white' : ''}`} />
+                {isRecording ? 'Stop Recording' : 'Speak Answer'}
+              </button>
+            </div>
             <textarea
               value={currentAnswer}
               onChange={(e) => {
                 console.log("Typing interview answer:", e.target.value);
                 setCurrentAnswer(e.target.value);
               }}
-              placeholder="Type your answer here..."
+              placeholder="Type or speak your answer here..."
               className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 h-48 transition-all resize-none leading-relaxed"
             />
           </div>
