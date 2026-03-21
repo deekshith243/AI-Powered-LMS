@@ -1,8 +1,6 @@
 const pool = require('../config/db');
 const Groq = require('groq-sdk');
 require('dotenv').config();
-const { exec } = require('child_process');
-const path = require('path');
 const fs = require('fs');
 
 const groq = new Groq({
@@ -395,33 +393,5 @@ Return ONLY a valid JSON object:
   }
 };
 
-// ─── PDF TEXT EXTRACTION ────────────────────────────────
-exports.extractPDF = async (req, res) => {
-  console.log("File received:", req.file);
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
-  }
-
-  const filePath = req.file.path;
-  const pythonScript = path.join(__dirname, '../../pdf_extractor.py');
-
-  // Try 'python3' then 'python'
-  const cmd = `python3 "${pythonScript}" "${filePath}"`;
-
-  exec(cmd, (err, stdout, stderr) => {
-    // Delete file after processing
-    fs.unlink(filePath, (unlinkErr) => {
-      if (unlinkErr) console.error("Unlink Error:", unlinkErr);
-    });
-
-    if (err) {
-      console.error("Python Execution Error:", err, stderr);
-      return res.status(500).json({ error: "PDF extraction failed" });
-    }
-
-    console.log("PDF extraction successful. Text length:", stdout.length);
-    return res.json({ text: stdout });
-  });
-};
 
 // ─── END OF AI CONTROLLER ───────────────────────────────

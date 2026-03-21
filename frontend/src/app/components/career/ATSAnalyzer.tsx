@@ -1,4 +1,5 @@
 'use client';
+// Vercel deployment cache-buster: 2026-03-21T13:46
 
 import React, { useState } from 'react';
 import { ShieldCheck, Upload, Loader2, CheckCircle2, AlertCircle, TrendingUp, Search } from 'lucide-react';
@@ -19,7 +20,7 @@ export default function ATSAnalyzer() {
   const [extractedText, setExtractedText] = useState('');
   const [stats, setStats] = useState<ATSStats | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,14 +28,24 @@ export default function ATSAnalyzer() {
     if (!file) return;
 
     setUploading(true);
-    setError('');
+    setInfo('');
+    console.log("Uploading file:", file.name);
+    
     try {
       const text = await extractTextFromPDF(file);
+      
+      if (!text || text.length < 20) {
+        throw new Error("Invalid or empty PDF");
+      }
+
       setResumeText(text);   // Sync textarea
       setExtractedText(text);
+      setInfo("✅ Resume uploaded successfully");
       console.log("PDF text extracted and synchronized to textarea");
     } catch (err: any) {
-      setError('PDF extraction failed');
+      console.error("PDF process handled:", err);
+      setResumeText("");
+      setInfo("Couldn't read PDF. Please paste your resume below.");
     } finally {
       setUploading(false);
     }
@@ -43,10 +54,10 @@ export default function ATSAnalyzer() {
   const handleAnalyze = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const finalText = resumeText;
-    if (!targetRole || !finalText) return setError('Please enter target role and provide resume (paste or PDF).');
+    if (!targetRole || !finalText) return setInfo('ℹ️ Please enter target role and provide resume (paste or PDF).');
     
     setLoading(true);
-    setError('');
+    setInfo('');
     
     try {
       const res = await fetch(`${API_URL}/api/ai/ats`, {
@@ -70,7 +81,7 @@ export default function ATSAnalyzer() {
       setStats(data);
     } catch (err: any) {
       console.error("ATS Error:", err);
-      setError(err.message || 'Analysis failed. Please try again.');
+      setInfo('ℹ️ Analysis failed. Please try again or check your connection.');
     } finally {
       setLoading(false);
     }
@@ -106,8 +117,9 @@ export default function ATSAnalyzer() {
               </label>
             </label>
             
+
             <textarea
-              placeholder="Paste your resume text here or upload a PDF above..."
+              placeholder="Paste your resume text here (recommended if PDF upload fails)..."
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 h-32 transition-all text-sm font-mono"
@@ -134,16 +146,16 @@ export default function ATSAnalyzer() {
           </div>
         </form>
 
-        {error && (
-          <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-2 text-sm">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            {error}
+        {info && (
+          <div className="bg-blue-100 text-blue-800 p-3 rounded mb-4 text-sm flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            {info}
           </div>
         )}
 
         <button
           onClick={handleAnalyze}
-          disabled={loading || uploading}
+          disabled={loading || uploading || !resumeText}
           className="premium-button w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         >
           {loading ? (

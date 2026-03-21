@@ -13,7 +13,7 @@ export default function ResumeImprover() {
   const [improvedResume, setImprovedResume] = useState('');
   const [originalResume, setOriginalResume] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,15 +21,24 @@ export default function ResumeImprover() {
     if (!file) return;
 
     setUploading(true);
-    setError('');
+    setInfo('');
     
+    console.log("Uploading file:", file.name);
     try {
       const text = await extractTextFromPDF(file);
+      
+      if (!text || text.length < 20) {
+        throw new Error("Invalid or empty PDF");
+      }
+
       setResumeText(text);   // Sync textarea
       setPdfText(text);
+      setInfo("✅ Resume uploaded successfully");
       console.log("PDF text extracted and synchronized to textarea");
     } catch (err: any) {
-      setError("PDF extraction failed");
+      console.error("PDF process handled:", err);
+      setResumeText("");
+      setInfo("Couldn't read PDF. Please paste your resume below.");
     } finally {
       setUploading(false);
     }
@@ -42,12 +51,12 @@ export default function ResumeImprover() {
       return;
     }
     if (!targetRole) {
-      setError("Please enter a target role");
+      setInfo("ℹ️ Please enter a target role");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setInfo('');
     
     try {
       const res = await fetch(`${API_URL}/api/ai/resume-improve`, {
@@ -72,7 +81,7 @@ export default function ResumeImprover() {
       setOriginalResume(finalText);
     } catch (err: any) {
       console.error("Improve Error:", err);
-      setError(err.message || 'Failed to improve resume. Please try again.');
+      setInfo('ℹ️ Optimization failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -111,12 +120,28 @@ export default function ResumeImprover() {
               </label>
             </label>
             
+
             <textarea
-              placeholder="Paste your current resume content here..."
+              placeholder="Paste your current resume content here (recommended if PDF upload fails)..."
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 h-32 transition-all text-sm font-mono"
             />
+
+            <div className="flex justify-between items-center text-[10px] text-gray-400 px-1 italic">
+              <span>Tip: Copy your resume from Word for best results</span>
+              <button 
+                type="button"
+                onClick={() => {
+                  setResumeText("");
+                  setPdfText("");
+                  setInfo("");
+                }}
+                className="text-purple-400 hover:underline font-bold"
+              >
+                ✍️ Paste Instead
+              </button>
+            </div>
 
             {uploading && (
                 <div className="flex items-center gap-2 text-purple-400 text-sm py-2">
@@ -139,16 +164,16 @@ export default function ResumeImprover() {
           </div>
         </form>
 
-        {error && (
-          <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-2 text-sm">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            {error}
+        {info && (
+          <div className="bg-blue-100 text-blue-800 p-3 rounded mb-4 text-sm flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            {info}
           </div>
         )}
 
         <button
           onClick={handleImprove}
-          disabled={loading || uploading}
+          disabled={loading || uploading || !resumeText}
           className="premium-button w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-lg hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         >
           {loading ? (

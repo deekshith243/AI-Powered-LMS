@@ -8,19 +8,6 @@ import Link from 'next/link';
 import { BookOpen, AlertCircle, Sparkles, Download, BarChart2, Award, Zap, Eye, BrainCircuit, ChevronRight, Briefcase, FileText, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
-import dynamic from 'next/dynamic';
-
-const CareerSuite = dynamic(() => import('../components/career/CareerSuite'), { 
-  ssr: false,
-  loading: () => (
-    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-2xl border border-gray-100">
-      <div className="flex flex-col items-center gap-3">
-        <Sparkles className="w-8 h-8 text-indigo-400 animate-pulse" />
-        <p className="text-gray-400 font-medium">Loading AI Career Suite...</p>
-      </div>
-    </div>
-  )
-});
 
 interface UserProfile {
   name: string;
@@ -45,9 +32,7 @@ export default function Profile() {
   const { user: authUser } = useAuthStore();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [subjects, setSubjects] = useState<EnrolledSubject[]>([]);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [recLoading, setRecLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloadingCert, setDownloadingCert] = useState<number | null>(null);
 
@@ -59,13 +44,6 @@ export default function Profile() {
         setUser(res.data.user);
         setSubjects(res.data.enrolled_subjects);
         
-        if (authUser?.id) {
-           api.get(`/ai/recommendations/${authUser.id}`).then(recRes => {
-              setRecommendations(recRes.data.recommendations);
-           }).catch(console.error).finally(() => setRecLoading(false));
-        } else {
-           setRecLoading(false);
-        }
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to load profile');
       } finally {
@@ -310,41 +288,6 @@ export default function Profile() {
         )}
       </div>
 
-      {/* 🚀 AI Career Suite Section */}
-      <div id="ai-career-suite" className="mt-16 mb-12 animate-fade-in">
-        <CareerSuite />
-      </div>
-
-      {/* AI Recommendations */}
-      <div className="mt-16 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-8 shadow-sm premium-card animate-fade-in mb-12">
-         <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            <Sparkles className="w-6 h-6 mr-3 text-indigo-600" />
-            AI Recommended For You
-         </h3>
-         
-         {recLoading ? (
-            <div className="space-y-4">
-               <Skeleton className="h-24 w-full" />
-               <Skeleton className="h-24 w-full" />
-            </div>
-         ) : recommendations.length === 0 ? (
-            <p className="text-gray-500">You've started all available courses! Check back later for new content.</p>
-         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               {recommendations.map(rec => (
-                  <Link href={`/learn/${rec.id}`} key={rec.id}>
-                     <div className="bg-white rounded-xl shadow-sm border border-indigo-100 p-5 hover:shadow-md transition group">
-                        <div className="flex items-center justify-between">
-                           <h4 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{rec.title}</h4>
-                           <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">{rec.description}</p>
-                     </div>
-                  </Link>
-               ))}
-            </div>
-         )}
-      </div>
     </div>
   );
 }
