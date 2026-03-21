@@ -91,22 +91,56 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Toggle Button for AI Career Suite */}
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={() => setShowCareerSuite(!showCareerSuite)}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold shadow-md hover:scale-105 transition"
-          >
-            {showCareerSuite ? "Hide AI Career Suite" : "Explore AI Career Suite"}
-          </button>
-        </div>
+        {/* 🚀 AI Career Suite (Restored) */}
+        <section className="max-w-7xl mx-auto px-6 py-12 scroll-mt-20">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">🚀 AI Career Suite</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="p-6 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
+              <h3 className="font-bold text-lg mb-1">Resume Generator</h3>
+              <p className="text-sm text-gray-500 mb-4">Build ATS-ready resume</p>
+              <Link href="/career/resume" className="text-indigo-600 font-bold text-sm hover:underline flex items-center gap-1 group">
+                Try Now 
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-all" />
+              </Link>
+            </div>
 
-        {/* 🚀 Expandable AI Career Suite */}
-        {showCareerSuite && (
-          <section className="mt-8 animate-in fade-in slide-in-from-top-4 duration-500">
-            <AICareerPreview />
-          </section>
-        )}
+            <div className="p-6 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
+              <h3 className="font-bold text-lg mb-1">ATS Score</h3>
+              <p className="text-sm text-gray-500 mb-4">Check resume matching</p>
+              <Link href="/career/ats" className="text-indigo-600 font-bold text-sm hover:underline flex items-center gap-1 group">
+                Try Now 
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-all" />
+              </Link>
+            </div>
+
+            <div className="p-6 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
+              <h3 className="font-bold text-lg mb-1">Improve Resume</h3>
+              <p className="text-sm text-gray-500 mb-4">AI-powered polishing</p>
+              <Link href="/career/improve" className="text-indigo-600 font-bold text-sm hover:underline flex items-center gap-1 group">
+                Try Now 
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-all" />
+              </Link>
+            </div>
+
+            <div className="p-6 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
+              <h3 className="font-bold text-lg mb-1">Mock Interview</h3>
+              <p className="text-sm text-gray-500 mb-4">Practice tech interviews</p>
+              <Link href="/career/interview" className="text-indigo-600 font-bold text-sm hover:underline flex items-center gap-1 group">
+                Try Now 
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-all" />
+              </Link>
+            </div>
+
+            <div className="p-6 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
+              <h3 className="font-bold text-lg mb-1">Career Path</h3>
+              <p className="text-sm text-gray-500 mb-4">Roadmap generator</p>
+              <Link href="/career/path" className="text-indigo-600 font-bold text-sm hover:underline flex items-center gap-1 group">
+                Try Now 
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-all" />
+              </Link>
+            </div>
+          </div>
+        </section>
 
         {/* Popular Courses */}
         <section id="catalog" className="scroll-mt-20">
