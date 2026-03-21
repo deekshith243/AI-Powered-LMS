@@ -1,7 +1,7 @@
 export const aiCareerRoutes = {
-  resume: "/resume",
-  ats: "/ats",
-  improve: "/improve",
-  mock: "/mock",
-  career: "/career-path",
+  resume: "/dashboard/resume",
+  ats: "/dashboard/ats",
+  improve: "/dashboard/improve",
+  mock: "/dashboard/mock",
+  career: "/dashboard/career-path",
 };
