@@ -1,27 +1,27 @@
 "use client";
 
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import * as pdfjsLib from "pdfjs-dist";
 
-// Worker from CDN for Vercel compatibility
-GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+// Worker from CDN for Vercel/Next.js compatibility
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-export async function extractTextFromPDF(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
+export const extractTextFromPDF = async (file: File): Promise<string> => {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-  const pdf = await getDocument({ data: arrayBuffer }).promise;
+    let fullText = "";
 
-  let text = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const strings = textContent.items.map((item: any) => item.str);
+        fullText += strings.join(" ") + "\n";
+    }
 
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-
-    const pageText = content.items
-      .map((item: any) => item.str)
-      .join(" ");
-
-    text += pageText + "\n";
+    return fullText;
+  } catch (err) {
+    console.error("PDF extraction failed", err);
+    throw new Error("PDF extraction failed");
   }
-
-  return text;
-}
+};

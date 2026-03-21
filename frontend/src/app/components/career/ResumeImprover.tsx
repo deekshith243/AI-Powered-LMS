@@ -25,19 +25,18 @@ export default function ResumeImprover() {
     
     try {
       const text = await extractTextFromPDF(file);
+      setResumeText(text);   // Sync textarea
       setPdfText(text);
-      console.log("PDF text extracted locally via frontend");
+      console.log("PDF text extracted and synchronized to textarea");
     } catch (err: any) {
-      console.error("Extraction Error:", err);
-      alert("PDF extraction failed");
-      setError(err.message || 'Failed to extract text from file.');
+      setError("PDF extraction failed");
     } finally {
       setUploading(false);
     }
   };
 
   const handleImprove = async () => {
-    const finalText = resumeText || pdfText;
+    const finalText = resumeText;
     if (!finalText) {
       alert("Please paste resume or upload PDF");
       return;

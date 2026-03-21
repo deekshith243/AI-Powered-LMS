@@ -16,7 +16,7 @@ interface ATSStats {
 export default function ATSAnalyzer() {
   const [targetRole, setTargetRole] = useState('');
   const [resumeText, setResumeText] = useState('');
-  const [pdfText, setPdfText] = useState('');
+  const [extractedText, setExtractedText] = useState('');
   const [stats, setStats] = useState<ATSStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,10 +30,11 @@ export default function ATSAnalyzer() {
     setError('');
     try {
       const text = await extractTextFromPDF(file);
-      setPdfText(text);
-      console.log("PDF text extracted locally via frontend");
+      setResumeText(text);   // Sync textarea
+      setExtractedText(text);
+      console.log("PDF text extracted and synchronized to textarea");
     } catch (err: any) {
-      setError(err.message || 'Failed to extract text from file.');
+      setError('PDF extraction failed');
     } finally {
       setUploading(false);
     }
@@ -41,7 +42,7 @@ export default function ATSAnalyzer() {
 
   const handleAnalyze = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const finalText = resumeText || pdfText;
+    const finalText = resumeText;
     if (!targetRole || !finalText) return setError('Please enter target role and provide resume (paste or PDF).');
     
     setLoading(true);
@@ -119,14 +120,14 @@ export default function ATSAnalyzer() {
                 </div>
             )}
 
-            {pdfText && !uploading && (
+            {extractedText && !uploading && (
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                     <div className="text-emerald-400 text-xs font-bold mb-1 flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" />
                         PDF uploaded successfully
                     </div>
                     <div className="text-gray-400 text-[10px] line-clamp-2 italic">
-                        Preview: {pdfText.substring(0, 200)}...
+                        Preview: {extractedText.substring(0, 200)}...
                     </div>
                 </div>
             )}
