@@ -16,7 +16,7 @@ export default function Login() {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (token) {
-      router.push("/");
+      router.replace("/");
     }
   }, [router]);
 
@@ -27,7 +27,7 @@ export default function Login() {
     try {
       const res = await api.post('/auth/login', { email, password });
       login(res.data.user, res.data.accessToken, res.data.refreshToken);
-      router.push('/');
+      router.replace('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
     }

@@ -62,7 +62,7 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setIsMobileMenuOpen(false);
-    router.push('/login');
+    router.replace('/login');
   };
 
   if (!mounted) return null;
