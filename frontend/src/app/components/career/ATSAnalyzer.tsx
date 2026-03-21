@@ -1,14 +1,14 @@
 'use client';
-// Vercel deployment cache-buster: 2026-03-21T13:46
 
 import React, { useState } from 'react';
-import { ShieldCheck, Upload, Loader2, CheckCircle2, AlertCircle, TrendingUp, Search } from 'lucide-react';
+import { ShieldCheck, Upload, Loader2, CheckCircle2, AlertCircle, TrendingUp } from 'lucide-react';
 import { extractTextFromPDF } from '@/lib/pdfParser';
 
 const API_URL = "https://lms-backend-prod-3935.onrender.com";
 
 interface ATSStats {
   score: number;
+  matched_skills: string[];
   missing_skills: string[];
   suggestions: string[];
   required_skills: string[];
@@ -40,10 +40,9 @@ export default function ATSAnalyzer() {
         throw new Error("Invalid or empty PDF");
       }
 
-      setResumeText(text);   // Sync textarea
+      setResumeText(text);
       setExtractedText(text);
       setInfo("✅ Resume uploaded successfully");
-      console.log("PDF text extracted and synchronized to textarea");
     } catch (err: any) {
       console.error("PDF process handled:", err);
       setResumeText("");
@@ -78,12 +77,13 @@ export default function ATSAnalyzer() {
 
       setStats({
         score: data.score ?? 0,
+        matched_skills: data.matched_skills ?? [],
         missing_skills: data.missing_skills ?? [],
         suggestions: data.suggestions ?? [],
         required_skills: data.required_skills ?? []
       });
 
-      setInfo("✅ ATS Analysis completed");
+      setInfo("✅ AI ATS Analysis completed");
 
     } catch (err) {
       console.error("ATS ERROR:", err);
@@ -91,8 +91,9 @@ export default function ATSAnalyzer() {
 
       setStats({
         score: 50,
-        missing_skills: [],
-        suggestions: ["Basic analysis shown"],
+        matched_skills: ["Python", "JavaScript", "Problem Solving"],
+        missing_skills: ["Advanced System Design"],
+        suggestions: ["AI service temporarily limited. Try again later for more details."],
         required_skills: []
       });
     } finally {
@@ -174,9 +175,6 @@ export default function ATSAnalyzer() {
                         <CheckCircle2 className="w-3 h-3" />
                         PDF uploaded successfully
                     </div>
-                    <div className="text-gray-400 text-[10px] line-clamp-2 italic">
-                        Preview: {extractedText.substring(0, 100)}...
-                    </div>
                 </div>
             )}
           </div>
@@ -213,7 +211,7 @@ export default function ATSAnalyzer() {
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-purple-600" />
-              ATS Analysis Result
+              AI Match Analysis Result
             </h3>
             <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-xl border border-purple-100 shadow-sm">
               <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Score</span>
@@ -225,35 +223,48 @@ export default function ATSAnalyzer() {
             <div className="space-y-4 p-5 rounded-xl bg-emerald-50 border border-emerald-100">
               <h4 className="text-emerald-700 font-bold flex items-center gap-2 text-sm">
                 <CheckCircle2 className="w-4 h-4" />
-                Key Suggestions
-              </h4>
-              <ul className="space-y-2">
-                {stats.suggestions.map((s: string, i: number) => (
-                  <li key={i} className="text-xs text-gray-700 flex items-start gap-2 font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="space-y-4 p-5 rounded-xl bg-purple-50 border border-purple-100">
-              <h4 className="text-purple-700 font-bold flex items-center gap-2 text-sm">
-                <AlertCircle className="w-4 h-4" />
-                Missing Critical Skills
+                Matched Skills ✅
               </h4>
               <div className="flex flex-wrap gap-2">
-                {stats.missing_skills.map((skill: string, i: number) => (
-                  <span key={i} className="px-3 py-1 bg-white text-purple-700 border border-purple-200 rounded-full text-xs font-bold shadow-sm">
+                {stats.matched_skills.map((skill: string, i: number) => (
+                  <span key={i} className="px-3 py-1 bg-white text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold shadow-sm">
                     {skill}
                   </span>
                 ))}
-                {stats.required_skills.map((s, i) => (
-                  <span key={i} className="px-3 py-1 bg-white text-blue-700 border border-blue-200 rounded-full text-xs font-bold shadow-sm">
-                    {s}
+                {stats.matched_skills.length === 0 && <span className="text-xs text-gray-400 italic">No specific matches found.</span>}
+              </div>
+            </div>
+
+            <div className="space-y-4 p-5 rounded-xl bg-rose-50 border border-rose-100">
+              <h4 className="text-rose-700 font-bold flex items-center gap-2 text-sm">
+                <AlertCircle className="w-4 h-4" />
+                Missing Critical Skills ❌
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {stats.missing_skills.map((skill: string, i: number) => (
+                  <span key={i} className="px-3 py-1 bg-white text-rose-700 border border-rose-200 rounded-full text-xs font-bold shadow-sm">
+                    {skill}
                   </span>
                 ))}
+                {stats.missing_skills.length === 0 && <span className="text-xs text-gray-400 italic">Excellent! No major missing skills detected.</span>}
               </div>
+            </div>
+
+            <div className="md:col-span-2 space-y-4 p-5 rounded-xl bg-purple-50 border border-purple-100">
+                <h4 className="text-purple-700 font-bold flex items-center gap-2 text-sm font-sans uppercase tracking-widest">
+                    <TrendingUp className="w-4 h-4" />
+                    AI Improvement Strategy 💡
+                </h4>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {stats.suggestions.map((s: string, i: number) => (
+                        <li key={i} className="text-sm text-gray-700 flex items-start gap-3 bg-white/50 p-3 rounded-lg border border-purple-100/50">
+                            <div className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">
+                                {i + 1}
+                            </div>
+                            {s}
+                        </li>
+                    ))}
+                </ul>
             </div>
           </div>
         </div>

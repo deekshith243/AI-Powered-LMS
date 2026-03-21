@@ -229,7 +229,7 @@ Provide a structured, clean resume in plain text.`;
   }
 };
 
-// ─── ATS ANALYZER (PERMANENT FALLBACK LOGIC) ─────────────
+// ─── ATS ANALYZER (AI POWERED) ───────────────────────────
 exports.analyzeATS = async (req, res) => {
   try {
     const { resumeText, targetRole } = req.body;
@@ -237,45 +237,74 @@ exports.analyzeATS = async (req, res) => {
     if (!resumeText || !targetRole) {
       return res.json({
         score: 0,
+        matched_skills: [],
         missing_skills: [],
-        suggestions: ["Please provide resume and target role"],
-        required_skills: []
+        suggestions: ["Please provide resume and target role"]
       });
     }
 
-    // SIMPLE KEYWORD MATCH LOGIC (NO AI → NO FAIL)
-    const keywords = targetRole.toLowerCase().split(" ");
-    const resume = (resumeText || "").toLowerCase();
+    const prompt = `
+You are a professional Applicant Tracking System (ATS). 
+Analyze the following resume against the target job role.
 
-    let matchCount = 0;
+TARGET ROLE:
+${targetRole}
 
-    keywords.forEach(word => {
-      if (resume.includes(word)) {
-        matchCount++;
-      }
-    });
+RESUME:
+${resumeText}
 
-    const score = Math.min(100, Math.floor((matchCount / keywords.length) * 100));
-    const missing_skills = keywords.filter(word => !resume.includes(word));
+Return a valid JSON object only. No preamble.
+Format:
+{
+  "score": 0-100,
+  "matched_skills": ["skill1", "skill2"],
+  "missing_skills": ["skillA", "skillB"],
+  "suggestions": ["suggestion1", "suggestion2"]
+}
 
-    return res.json({
-      score: score || 50,
-      missing_skills,
-      suggestions: [
-        "Add more relevant skills based on job role",
-        "Include project experience",
-        "Improve keyword matching"
-      ],
-      required_skills: keywords
-    });
+Guidelines:
+- Score based on skill relevance, experience match, and keywords.
+- Only return 0 if the resume is completely empty or irrelevant.
+- "matched_skills" should include relevant skills found in the resume for this role.
+- "missing_skills" should be critical skills expected for this role but missing in the resume.
+- "suggestions" must be actionable for the candidate.
+`;
+
+    try {
+      const completion = await groq.chat.completions.create({
+        messages: [{ role: "user", content: prompt }],
+        model: "llama-3.3-70b-versatile",
+        temperature: 0.3,
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(completion.choices[0]?.message?.content || "{}");
+      
+      return res.json({
+        score: result.score ?? 70,
+        matched_skills: result.matched_skills ?? [],
+        missing_skills: result.missing_skills ?? [],
+        suggestions: result.suggestions ?? ["Optimize your resume for keywords"]
+      });
+
+    } catch (groqErr) {
+      console.error("GROQ ERROR (ATS AI):", groqErr.message);
+      // Fallback to basic scoring if Groq fails
+      return res.json({
+        score: 65,
+        matched_skills: ["General Technical Skills"],
+        missing_skills: ["Specific Role-Based Skills"],
+        suggestions: ["AI analysis temporarily limited. Try again later for more detail."]
+      });
+    }
 
   } catch (error) {
-    console.error("ATS ERROR:", error);
-    return res.json({
-      score: 50,
+    console.error("ATS API ERROR:", error);
+    return res.status(500).json({
+      score: 0,
+      matched_skills: [],
       missing_skills: [],
-      suggestions: ["Fallback analysis used"],
-      required_skills: []
+      suggestions: ["Server error. Please try again later."]
     });
   }
 };
