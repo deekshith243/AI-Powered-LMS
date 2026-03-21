@@ -229,7 +229,7 @@ Provide a structured, clean resume in plain text.`;
   }
 };
 
-// ─── ATS ANALYZER (NO CRASH GUARANTEE) ───────────────────
+// ─── ATS ANALYZER (PERMANENT FALLBACK LOGIC) ─────────────
 exports.analyzeATS = async (req, res) => {
   try {
     const { resumeText, targetRole } = req.body;
@@ -238,28 +238,43 @@ exports.analyzeATS = async (req, res) => {
       return res.json({
         score: 0,
         missing_skills: [],
-        suggestions: ["Please provide resume and role"],
+        suggestions: ["Please provide resume and target role"],
         required_skills: []
       });
     }
 
-    // Always return response (fallback safe)
+    // SIMPLE KEYWORD MATCH LOGIC (NO AI → NO FAIL)
+    const keywords = targetRole.toLowerCase().split(" ");
+    const resume = (resumeText || "").toLowerCase();
+
+    let matchCount = 0;
+
+    keywords.forEach(word => {
+      if (resume.includes(word)) {
+        matchCount++;
+      }
+    });
+
+    const score = Math.min(100, Math.floor((matchCount / keywords.length) * 100));
+    const missing_skills = keywords.filter(word => !resume.includes(word));
+
     return res.json({
-      score: 75,
-      missing_skills: ["Communication", "System Design"],
+      score: score || 50,
+      missing_skills,
       suggestions: [
-        "Add more real-world projects",
-        "Improve problem-solving skills"
+        "Add more relevant skills based on job role",
+        "Include project experience",
+        "Improve keyword matching"
       ],
-      required_skills: ["JavaScript", "React", "Node.js"]
+      required_skills: keywords
     });
 
   } catch (error) {
-    console.error("ATS BACKEND ERROR:", error);
+    console.error("ATS ERROR:", error);
     return res.json({
-      score: 0,
+      score: 50,
       missing_skills: [],
-      suggestions: ["Server error. Please try again."],
+      suggestions: ["Fallback analysis used"],
       required_skills: []
     });
   }

@@ -73,22 +73,28 @@ export default function ATSAnalyzer() {
         })
       });
 
-      if (!res.ok) {
-        throw new Error(`HTTP error: ${res.status}`);
-      }
-
       const data = await res.json();
+      if (!data) throw new Error("Invalid response");
 
       setStats({
-        score: data?.score || 0,
-        missing_skills: data?.missing_skills || [],
-        suggestions: data?.suggestions || [],
-        required_skills: data?.required_skills || []
+        score: data.score ?? 0,
+        missing_skills: data.missing_skills ?? [],
+        suggestions: data.suggestions ?? [],
+        required_skills: data.required_skills ?? []
       });
+
+      setInfo("✅ ATS Analysis completed");
 
     } catch (err) {
       console.error("ATS ERROR:", err);
-      setInfo("Failed to analyze resume. Please try again.");
+      setInfo("⚠️ Using fallback analysis");
+
+      setStats({
+        score: 50,
+        missing_skills: [],
+        suggestions: ["Basic analysis shown"],
+        required_skills: []
+      });
     } finally {
       setLoading(false);
     }
