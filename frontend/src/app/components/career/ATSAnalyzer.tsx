@@ -77,15 +77,14 @@ export default function ATSAnalyzer() {
       });
 
       if (!res.ok) {
-        alert("Something went wrong");
-        throw new Error("API error");
+        throw new Error("ATS API failed. Please check your connection or try again later.");
       }
 
       const data = await res.json();
       setStats(data);
     } catch (err: any) {
       console.error("ATS Error:", err);
-      setInfo('ℹ️ Analysis failed. Please try again or check your connection.');
+      setInfo(err?.message || "ℹ️ Analysis failed. Please try again or check your connection.");
     } finally {
       setLoading(false);
     }

@@ -138,10 +138,13 @@ export default function MockInterview() {
     return (
       <div className="premium-card p-8 rounded-2xl bg-white border border-gray-100 shadow-xl animate-in zoom-in duration-500">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-indigo-100 text-indigo-600 mb-4 border-4 border-white shadow-lg">
+          <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${evaluation.score === 0 ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-600'} mb-4 border-4 border-white shadow-lg`}>
             <span className="text-4xl font-black">{evaluation.score}</span>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Interview Performance</h2>
+          {evaluation.score === 0 && (
+            <p className="text-red-500 text-xs font-bold mt-2 animate-pulse">⚠️ No valid answers provided</p>
+          )}
           <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">{role}</p>
         </div>
 
