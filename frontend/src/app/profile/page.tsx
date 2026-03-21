@@ -8,6 +8,19 @@ import Link from 'next/link';
 import { BookOpen, AlertCircle, Sparkles, Download, BarChart2, Award, Zap, Eye, BrainCircuit, ChevronRight, Briefcase, FileText, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
+import dynamic from 'next/dynamic';
+
+const CareerSuite = dynamic(() => import('../components/career/CareerSuite'), { 
+  ssr: false,
+  loading: () => (
+    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-2xl border border-gray-100">
+      <div className="flex flex-col items-center gap-3">
+        <Sparkles className="w-8 h-8 text-indigo-400 animate-pulse" />
+        <p className="text-gray-400 font-medium">Loading AI Career Suite...</p>
+      </div>
+    </div>
+  )
+});
 
 interface UserProfile {
   name: string;
@@ -288,6 +301,10 @@ export default function Profile() {
         )}
       </div>
 
+      {/* 🚀 AI Career Suite Section */}
+      <div id="ai-suite" className="mt-16 mb-12 animate-fade-in">
+        <CareerSuite />
+      </div>
     </div>
   );
 }

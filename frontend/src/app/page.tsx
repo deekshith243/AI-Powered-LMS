@@ -8,10 +8,7 @@ import api from '../lib/api';
 import AIRecommended from './components/ai/AIRecommended';
 import { Skeleton } from './components/ui/Skeleton';
 
-const CareerSuite = dynamic(() => import('./components/career/CareerSuite'), {
-  ssr: false,
-  loading: () => <div className="h-64 bg-gray-50 rounded-2xl animate-pulse" />
-});
+import AICareerPreview from './components/home/AICareerPreview';
 
 export default function Home() {
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -72,9 +69,9 @@ export default function Home() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 space-y-32">
-        {/* 🚀 AI Career Suite */}
-        <div id="career-suite" className="scroll-mt-20">
-          <CareerSuite />
+        {/* 🚀 AI Career Preview */}
+        <div id="career-preview" className="scroll-mt-20">
+          <AICareerPreview />
         </div>
 
         {/* AI Recommendations */}
