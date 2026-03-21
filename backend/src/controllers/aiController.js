@@ -308,19 +308,67 @@ exports.evaluateInterview = async (req, res) => {
   try {
     const { role, questions, userAnswers } = req.body;
     
-    const prompt = `Evaluate these mock interview answers for a ${role} position. Provide a score and general feedback.
-Answers: ${userAnswers.join(' | ')}`;
+    // PART 1: Validation
+    const hasAnswers = userAnswers && userAnswers.some(ans => ans && ans.trim().length > 0);
+    
+    if (!hasAnswers) {
+      return res.json({
+        score: 0,
+        feedback: "No answers provided. Please answer the questions to receive evaluation.",
+        suggestions: ["Try to answer at least one question", "Use the 'Speak Answer' feature for convenience"]
+      });
+    }
+
+    // PART 2: Improved Scoring Logic with Groq
+    const prompt = `Evaluate these mock interview answers for a ${role} position. 
+Questions: ${questions.join(' | ')}
+Answers: ${userAnswers.join(' | ')}
+
+Provide a detailed evaluation based on:
+1. Relevance to the question
+2. Clarity and structure of the response
+3. Technical correctness (if applicable)
+4. Use of real-world examples
+5. Confidence and professionalism
+
+Return ONLY a valid JSON object with this exact format:
+{
+  "score": 85, 
+  "feedback": "Overall summary of performance...",
+  "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
+}`;
 
     const completion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
       model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
     });
 
-    const feedback = completion.choices[0]?.message?.content || "Evaluation failed.";
-    return res.json({ score: 80, feedback });
+    let result;
+    try {
+      result = JSON.parse(completion.choices[0]?.message?.content || "{}");
+    } catch (parseErr) {
+      console.error("JSON Parse Error (Interview):", parseErr);
+      result = {
+        score: 50,
+        feedback: completion.choices[0]?.message?.content || "Evaluation failed to parse.",
+        suggestions: ["Try to be more concise", "Focus on technical details"]
+      };
+    }
+
+    return res.json({
+      score: result.score || 0,
+      feedback: result.feedback || "Evaluation completed.",
+      suggestions: result.suggestions || []
+    });
+
   } catch (err) {
     console.error("GROQ ERROR (Evaluate):", err.message);
-    return res.status(500).json({ score: 0, feedback: "Evaluation failed." });
+    return res.status(500).json({ 
+      score: 0, 
+      feedback: "Evaluation failed due to server error.",
+      suggestions: ["Please try again later"]
+    });
   }
 };
 

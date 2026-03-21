@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Mic, Send, Loader2, CheckCircle2, AlertCircle, Timer, User, BrainCircuit, RefreshCw } from 'lucide-react';
+import { Mic, Send, Loader2, CheckCircle2, AlertCircle, Timer, User, BrainCircuit, RefreshCw, Sparkles } from 'lucide-react';
 
 import api from '../../../lib/api';
 
@@ -96,19 +96,33 @@ export default function MockInterview() {
   };
 
   const handleFinish = async () => {
+    // PART 1: Validation
+    const hasAnswers = answers.some(ans => ans && ans.trim().length > 0) || (currentAnswer && currentAnswer.trim().length > 0);
+    
+    if (!hasAnswers) {
+      setError("Please answer at least one question before finishing the interview.");
+      return;
+    }
+
     setEvaluating(true);
     setIsInterviewActive(false);
+    setError('');
     
     try {
+      // Ensure the last answer is included
+      const finalAnswers = [...answers];
+      if (currentAnswer) finalAnswers[currentStep] = currentAnswer;
+
       const res = await api.post('/ai/interview/evaluate', { 
         role, 
         questions, 
-        userAnswers: answers 
+        userAnswers: finalAnswers 
       });
       setEvaluation(res.data);
     } catch (err: any) {
       console.error("Evaluation Error:", err);
       setError('Evaluation failed.');
+      setIsInterviewActive(true); // Allow them to try again
     } finally {
       setEvaluating(false);
     }
@@ -124,22 +138,44 @@ export default function MockInterview() {
     return (
       <div className="premium-card p-8 rounded-2xl bg-white border border-gray-100 shadow-xl animate-in zoom-in duration-500">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 text-blue-600 mb-4 border border-blue-200">
-            <span className="text-3xl font-bold">{evaluation.score}</span>
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-indigo-100 text-indigo-600 mb-4 border-4 border-white shadow-lg">
+            <span className="text-4xl font-black">{evaluation.score}</span>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Performance Feedback</h2>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Interview Performance</h2>
+          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">{role}</p>
         </div>
 
-        <div className="p-6 rounded-2xl bg-indigo-50 border border-indigo-100 mb-8">
-          <p className="text-sm text-indigo-800 leading-relaxed italic">{evaluation.feedback || evaluation.overall_feedback}</p>
+        <div className="space-y-6">
+            <div className="p-6 rounded-2xl bg-indigo-50 border border-indigo-100">
+               <h3 className="text-sm font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" /> Overall Feedback
+               </h3>
+               <p className="text-sm text-indigo-800 leading-relaxed italic">{evaluation.feedback || evaluation.overall_feedback}</p>
+            </div>
+
+            {evaluation.suggestions && evaluation.suggestions.length > 0 && (
+                <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-100">
+                   <h3 className="text-sm font-bold text-emerald-900 mb-3 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" /> Growth Suggestions
+                   </h3>
+                   <ul className="space-y-2">
+                      {evaluation.suggestions.map((s: string, i: number) => (
+                        <li key={i} className="text-xs text-emerald-800 flex items-start gap-2">
+                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1 shrink-0" />
+                           {s}
+                        </li>
+                      ))}
+                   </ul>
+                </div>
+            )}
         </div>
 
         <button
-          onClick={() => { setEvaluation(null); setQuestions([]); setIsInterviewActive(false); }}
-          className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+          onClick={() => { setEvaluation(null); setQuestions([]); setIsInterviewActive(false); setRole(''); }}
+          className="w-full mt-8 py-4 rounded-xl bg-black text-white font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2 shadow-lg"
         >
           <RefreshCw className="w-4 h-4" />
-          Start New Interview
+          Retake Interview
         </button>
       </div>
     );
@@ -235,39 +271,46 @@ export default function MockInterview() {
             />
           </div>
 
-          <div className="flex justify-between items-center">
-            <button
-              onClick={() => {
-                if (currentStep > 0) {
-                  const updatedAnswers = [...answers];
-                  updatedAnswers[currentStep] = currentAnswer;
-                  setAnswers(updatedAnswers);
-                  setCurrentStep(currentStep - 1);
-                  setCurrentAnswer(answers[currentStep - 1]);
-                }
-              }}
-              disabled={currentStep === 0}
-              className="px-6 py-2 rounded-lg text-gray-400 hover:text-white disabled:opacity-30 transition-all font-medium"
-            >
-              Previous
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={evaluating}
-              className="px-10 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
-            >
-              {evaluating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Evaluating Answers...
-                </>
-              ) : (
-                <>
-                  {currentStep === questions.length - 1 ? 'Finish Interview' : 'Next Question'}
-                  <Send className="w-4 h-4 ml-1" />
-                </>
-              )}
-            </button>
+          <div className="flex flex-col gap-4">
+            {error && (
+              <p className="text-red-500 text-xs font-bold flex items-center gap-2 bg-red-50 p-3 rounded-xl border border-red-100 animate-pulse">
+                <AlertCircle className="w-4 h-4" /> {error}
+              </p>
+            )}
+            <div className="flex justify-between items-center">
+                <button
+                onClick={() => {
+                    if (currentStep > 0) {
+                    const updatedAnswers = [...answers];
+                    updatedAnswers[currentStep] = currentAnswer;
+                    setAnswers(updatedAnswers);
+                    setCurrentStep(currentStep - 1);
+                    setCurrentAnswer(answers[currentStep - 1]);
+                    }
+                }}
+                disabled={currentStep === 0}
+                className="px-6 py-2 rounded-lg text-gray-400 hover:text-white disabled:opacity-30 transition-all font-medium"
+                >
+                Previous
+                </button>
+                <button
+                onClick={handleNext}
+                disabled={evaluating || (currentStep === questions.length - 1 && !currentAnswer && !answers.some(a => a && a.trim()))}
+                className="px-10 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                {evaluating ? (
+                    <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Evaluating Answers...
+                    </>
+                ) : (
+                    <>
+                    {currentStep === questions.length - 1 ? 'Finish Interview' : 'Next Question'}
+                    <Send className="w-4 h-4 ml-1" />
+                    </>
+                )}
+                </button>
+            </div>
           </div>
         </div>
       )}
