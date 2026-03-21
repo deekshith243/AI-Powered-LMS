@@ -1,7 +1,7 @@
 const pool = require('../config/db');
 const Groq = require('groq-sdk');
 require('dotenv').config();
-const pdf = require('pdf-parse');
+// const pdf = require('pdf-parse'); // Moved inside function as per user request
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -395,14 +395,22 @@ Return ONLY a valid JSON object:
 
 // ─── PDF TEXT EXTRACTION ────────────────────────────────
 exports.extractPDF = async (req, res) => {
+  console.log("File received:", req.file);
   try {
+    const pdf = require('pdf-parse');
+
     if (!req.file) {
+      console.error("No file uploaded in req.file");
       return res.status(400).json({ error: "No file uploaded" });
     }
+
+    console.log("Starting PDF parsing for buffer size:", req.file.buffer.length);
     const data = await pdf(req.file.buffer);
+    console.log("PDF extraction successful. Text length:", data.text?.length);
+    
     return res.json({ text: data.text });
   } catch (err) {
-    console.error("PDF Extraction Error:", err);
-    return res.status(500).json({ error: "Failed to extract PDF text" });
+    console.error("PDF ERROR:", err);
+    return res.status(500).json({ error: "PDF extraction failed" });
   }
 };

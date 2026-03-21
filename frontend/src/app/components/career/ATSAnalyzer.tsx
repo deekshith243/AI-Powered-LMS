@@ -61,6 +61,7 @@ export default function ATSAnalyzer() {
       });
 
       if (!res.ok) {
+        alert("PDF extraction failed");
         throw new Error("Failed to extract PDF text from backend");
       }
 

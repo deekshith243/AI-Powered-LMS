@@ -38,6 +38,7 @@ export default function ResumeImprover() {
       });
 
       if (!extractRes.ok) {
+        alert("PDF extraction failed");
         throw new Error("Failed to extract PDF text");
       }
 
