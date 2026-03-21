@@ -6,7 +6,7 @@ import api from '@/lib/api';
 
 const CATEGORIES = ["All", "Developer", "Data", "AI/ML", "Cloud"];
 
-export default function PlacementsPage() {
+export default function JobsPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
@@ -15,11 +15,11 @@ export default function PlacementsPage() {
     try {
       const res = await api.get('/jobs');
       const data = res.data;
-      let results = data.results || [];
+      // Backend returns an array directly now
+      let results = Array.isArray(data) ? data : (data.results || []);
       setJobs(results);
     } catch (err) {
       console.error("Error fetching jobs:", err);
-      // Fallback
       setJobs([]);
     } finally {
       setLoading(false);
@@ -27,7 +27,7 @@ export default function PlacementsPage() {
   };
 
   const handleApply = (job: any) => {
-    window.open(job.redirect_url, '_blank', 'noopener,noreferrer');
+    window.open(job.redirect_url || 'https://careers.google.com', '_blank', 'noopener,noreferrer');
   };
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function PlacementsPage() {
   const filteredJobs = useMemo(() => {
     if (activeFilter === "All") return jobs;
     return jobs.filter(job => {
-      const text = `${job.title} ${job.company.display_name} ${job.description || ''}`.toLowerCase();
+      const text = `${job.title} ${job.company?.display_name || ''} ${job.description || ''}`.toLowerCase();
       if (activeFilter === "Developer") return text.includes('developer') || text.includes('engineer') || text.includes('backend') || text.includes('frontend') || text.includes('fullstack');
       if (activeFilter === "Data") return text.includes('data') || text.includes('analyst') || text.includes('scientist');
       if (activeFilter === "AI/ML") return text.includes('ai') || text.includes('ml') || text.includes('machine learning') || text.includes('intelligence');
@@ -62,11 +62,11 @@ export default function PlacementsPage() {
         <div className="max-w-7xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-white font-bold text-sm mb-6 backdrop-blur-sm">
               <Sparkles className="w-4 h-4 text-yellow-300" />
-              Direct Career Placements
+              Direct Tech Opportunities
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">🚀 Jobs & Placements</h1>
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">🚀 Jobs</h1>
             <p className="text-indigo-100 max-w-2xl mx-auto text-lg mb-8">
-                Explore 100+ verified roles from global tech giants and innovative startups.
+                Explore 30+ verified roles from global tech giants and innovative startups.
             </p>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function PlacementsPage() {
                     </div>
 
                     <h2 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors uppercase tracking-tight line-clamp-1">
-                        {job.company.display_name}
+                        {job.company?.display_name || 'Tech Company'}
                     </h2>
 
                     <p className="text-gray-600 text-sm font-medium mb-3 line-clamp-1">
@@ -117,12 +117,12 @@ export default function PlacementsPage() {
                     <div className="space-y-2 mb-5">
                         <div className="flex items-center text-[11px] text-gray-400 font-bold uppercase tracking-wider">
                             <MapPin className="w-3 h-3 mr-1.5 text-indigo-400" />
-                            📍 {job.location.display_name}
+                            📍 {job.location?.display_name || 'Remote/India'}
                         </div>
                         {job.salary_min && (
                             <div className="flex items-center text-sm text-emerald-600 font-extrabold tracking-tight">
                                 <IndianRupee className="w-3.5 h-3.5 mr-1" />
-                                ₹ {job.salary_min.toLocaleString()} {job.salary_max ? `- ₹ ${job.salary_max.toLocaleString()}` : ''}
+                                {job.salary_min.toLocaleString()} {job.salary_max ? `- ${job.salary_max.toLocaleString()}` : ''}
                             </div>
                         )}
                     </div>

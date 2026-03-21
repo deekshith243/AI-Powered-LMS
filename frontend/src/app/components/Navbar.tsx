@@ -132,10 +132,10 @@ export default function Navbar() {
             )}
 
             <button
-              onClick={() => router.push("/placements")}
+              onClick={() => router.push("/jobs")}
               className="mr-2 px-4 py-1.5 text-sm font-bold text-white bg-purple-600 rounded-full hover:bg-purple-700 transition shadow-md shadow-purple-100"
             >
-              Placements
+              Jobs
             </button>
 
             {isAuthenticated && (
@@ -207,11 +207,11 @@ export default function Navbar() {
                 My Profile
               </Link>
               <Link 
-                href="/placements"
+                href="/jobs"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-purple-500"
               >
-                Placements
+                Jobs
               </Link>
               <button
                 onClick={handleLogout}
