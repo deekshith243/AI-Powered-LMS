@@ -394,4 +394,88 @@ Return ONLY a valid JSON object:
 };
 
 
+// ─── JOB MATCH ANALYZER ──────────────────────────────────
+exports.jobMatch = async (req, res) => {
+  try {
+    const { resumeText, jobDescription } = req.body;
+    if (!resumeText || !jobDescription) {
+      return res.status(400).json({ error: "Resume and Job Description required" });
+    }
+
+    const prompt = `Match this resume with the job description.
+Resume: ${resumeText.substring(0, 3000)}
+JD: ${jobDescription.substring(0, 3000)}
+
+Return ONLY a valid JSON object:
+{
+  "match_score": 85,
+  "missing_keywords": ["Keyword 1", "Keyword 2"],
+  "matched_skills": ["Skill A", "Skill B"],
+  "suggestions": ["Add X", "Quantify Y"],
+  "improved_resume": "The full tailored resume content..."
+}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    const result = JSON.parse(completion.choices[0]?.message?.content);
+    return res.json(result);
+  } catch (err) {
+    console.error("GROQ ERROR (Job Match):", err.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// ─── DASHBOARD INSIGHTS ──────────────────────────────────
+exports.getDashboardInsights = async (req, res) => {
+  try {
+    const userId = req.user.id; // From authMiddleware
+
+    // Fetch user progress data
+    const [progress] = await pool.query(`
+      SELECT s.title, vp.percent_complete
+      FROM video_progress vp
+      JOIN videos v ON vp.video_id = v.id
+      JOIN sections sec ON v.section_id = sec.id
+      JOIN subjects s ON sec.subject_id = s.id
+      WHERE vp.user_id = ?
+    `, [userId]);
+
+    const [badges] = await pool.query('SELECT name FROM badges WHERE user_id = ?', [userId]);
+
+    const stats = {
+      coursesCovered: progress.length,
+      averageProgress: progress.length > 0 ? progress.reduce((a, b) => a + b.percent_complete, 0) / progress.length : 0,
+      badgeCount: badges.length,
+      topics: progress.map(p => p.title)
+    };
+
+    const prompt = `Analyze this student's learning data and provide career insights.
+Stats: ${JSON.stringify(stats)}
+
+Return ONLY a valid JSON object:
+{
+  "strengths": ["Fast learner in X", "Great progress in Y"],
+  "weaknesses": ["Needs more focus on Z"],
+  "recommendations": ["Try Advanced Python", "Work on a project in React"],
+  "next_steps": ["Complete the remaining 20% of Java", "Take a Mock Interview"]
+}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    const insights = JSON.parse(completion.choices[0]?.message?.content);
+    return res.json(insights);
+  } catch (err) {
+    console.error("GROQ ERROR (Insights):", err.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 // ─── END OF AI CONTROLLER ───────────────────────────────

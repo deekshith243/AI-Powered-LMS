@@ -12,7 +12,9 @@ const {
   analyzeATS,
   improveResume,
   startInterview,
-  evaluateInterview
+  evaluateInterview,
+  jobMatch,
+  getDashboardInsights
 } = require('../controllers/aiController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
@@ -30,5 +32,7 @@ router.post('/ats', authMiddleware, analyzeATS);
 router.post('/resume-improve', authMiddleware, improveResume);
 router.post('/interview/start', authMiddleware, startInterview);
 router.post('/interview/evaluate', authMiddleware, evaluateInterview);
+router.post('/job-match', authMiddleware, jobMatch);
+router.post('/dashboard-insights', authMiddleware, getDashboardInsights);
 
 module.exports = router;
