@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ShieldCheck, Upload, Loader2, CheckCircle2, AlertCircle, TrendingUp, Search } from 'lucide-react';
+import { extractTextFromPDF } from '../../utils/pdfUtils';
 
 const API_URL = "https://lms-backend-prod-3935.onrender.com";
 
@@ -15,32 +16,11 @@ interface ATSStats {
 export default function ATSAnalyzer() {
   const [targetRole, setTargetRole] = useState('');
   const [resumeText, setResumeText] = useState('');
+  const [extractedText, setExtractedText] = useState('');
   const [stats, setStats] = useState<ATSStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
-
-  const extractTextfromPDF = async (file: File) => {
-    try {
-      // Dynamic import to avoid top-level issues with pdfjs-dist in Next.js
-      const pdfjs = await import('pdfjs-dist');
-      pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-      
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-      let fullText = '';
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const strings = textContent.items.map((item: any) => item.str);
-        fullText += strings.join(' ') + '\n';
-      }
-      return fullText;
-    } catch (err) {
-      console.error('PDF Extraction Error:', err);
-      throw new Error('Failed to extract text from PDF. Please check the file format.');
-    }
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,25 +29,9 @@ export default function ATSAnalyzer() {
     setUploading(true);
     setError('');
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch(`${API_URL}/api/ai/extract-pdf`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: formData
-      });
-
-      if (!res.ok) {
-        alert("PDF extraction failed");
-        throw new Error("Failed to extract PDF text from backend");
-      }
-
-      const data = await res.json();
-      setResumeText(data.text);
-      console.log("File uploaded and text extracted via backend");
+      const text = await extractTextFromPDF(file);
+      setExtractedText(text);
+      console.log("PDF text extracted locally via frontend");
     } catch (err: any) {
       setError(err.message || 'Failed to extract text from file.');
     } finally {
@@ -77,14 +41,12 @@ export default function ATSAnalyzer() {
 
   const handleAnalyze = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!targetRole || !resumeText) return setError('Please enter target role and resume text.');
+    const finalText = resumeText || extractedText;
+    if (!targetRole || !finalText) return setError('Please enter target role and provide resume (paste or PDF).');
+    
     setLoading(true);
     setError('');
     
-    console.log("--- ATS Analysis ---");
-    console.log("Sending role:", targetRole);
-    console.log(`Endpoint: ${API_URL}/api/ai/ats`);
-
     try {
       const res = await fetch(`${API_URL}/api/ai/ats`, {
         method: "POST",
@@ -93,19 +55,17 @@ export default function ATSAnalyzer() {
           "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
         },
         body: JSON.stringify({
-          resumeText,
+          resumeText: finalText,
           targetRole
         })
       });
 
       if (!res.ok) {
-        console.error("API error");
         alert("Something went wrong");
         throw new Error("API error");
       }
 
       const data = await res.json();
-      console.log("ATS Response:", data);
       setStats(data);
     } catch (err: any) {
       console.error("ATS Error:", err);
@@ -144,18 +104,31 @@ export default function ATSAnalyzer() {
                 <input type="file" accept=".pdf" className="hidden" onChange={handleFileUpload} />
               </label>
             </label>
-            {uploading ? (
-              <div className="h-40 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center text-gray-400">
-                <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                Extracting text from PDF...
-              </div>
-            ) : (
-              <textarea
-                placeholder="Paste your resume text here or upload a PDF above..."
-                value={resumeText}
-                onChange={(e) => setResumeText(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 h-40 transition-all text-sm font-mono"
-              />
+            
+            <textarea
+              placeholder="Paste your resume text here or upload a PDF above..."
+              value={resumeText}
+              onChange={(e) => setResumeText(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 h-32 transition-all text-sm font-mono"
+            />
+
+            {uploading && (
+                <div className="flex items-center gap-2 text-purple-400 text-sm py-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Extracting PDF...
+                </div>
+            )}
+
+            {extractedText && !uploading && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                    <div className="text-emerald-400 text-xs font-bold mb-1 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        PDF uploaded successfully
+                    </div>
+                    <div className="text-gray-400 text-[10px] line-clamp-2 italic">
+                        Preview: {extractedText.substring(0, 200)}...
+                    </div>
+                </div>
             )}
           </div>
         </form>

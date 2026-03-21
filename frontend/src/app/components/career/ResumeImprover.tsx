@@ -2,22 +2,48 @@
 
 import React, { useState } from 'react';
 import { PencilLine, Wand2, Loader2, CheckCircle2, AlertCircle, FileEdit, Upload } from 'lucide-react';
+import { extractTextFromPDF } from '../../utils/pdfUtils';
 
 const API_URL = "https://lms-backend-prod-3935.onrender.com";
 
 export default function ResumeImprover() {
   const [resumeText, setResumeText] = useState('');
+  const [pdfText, setPdfText] = useState('');
   const [targetRole, setTargetRole] = useState('');
   const [improvedResume, setImprovedResume] = useState('');
   const [originalResume, setOriginalResume] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
 
-  const handleImproveUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setUploading(true);
+    setError('');
+    
+    try {
+      const text = await extractTextFromPDF(file);
+      setPdfText(text);
+      console.log("PDF text extracted locally via frontend");
+    } catch (err: any) {
+      console.error("Extraction Error:", err);
+      alert("PDF extraction failed");
+      setError(err.message || 'Failed to extract text from file.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleImprove = async () => {
+    const finalText = resumeText || pdfText;
+    if (!finalText) {
+      alert("Please paste resume or upload PDF");
+      return;
+    }
     if (!targetRole) {
-      alert("Please enter a target role first");
+      setError("Please enter a target role");
       return;
     }
 
@@ -25,30 +51,6 @@ export default function ResumeImprover() {
     setError('');
     
     try {
-      // 1. Extract text via backend
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const extractRes = await fetch(`${API_URL}/api/ai/extract-pdf`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: formData
-      });
-
-      if (!extractRes.ok) {
-        alert("PDF extraction failed");
-        throw new Error("Failed to extract PDF text");
-      }
-
-      const extractData = await extractRes.json();
-      const text = extractData.text;
-
-      console.log("--- Improving Resume ---");
-      console.log("Sending role:", targetRole);
-      
-      // 2. Improve resume
       const res = await fetch(`${API_URL}/api/ai/resume-improve`, {
         method: "POST",
         headers: {
@@ -56,21 +58,19 @@ export default function ResumeImprover() {
           "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
         },
         body: JSON.stringify({
-          resumeText: text,
+          resumeText: finalText,
           targetRole
         })
       });
 
       if (!res.ok) {
-        console.error("Improve API error");
-        alert("Improvement API failed");
+        alert("API error");
         throw new Error("Improvement API failed");
       }
 
       const data = await res.json();
       setImprovedResume(data.improved_resume);
-      setOriginalResume(text);
-      setResumeText(text);
+      setOriginalResume(finalText);
     } catch (err: any) {
       console.error("Improve Error:", err);
       setError(err.message || 'Failed to improve resume. Please try again.');
@@ -87,7 +87,7 @@ export default function ResumeImprover() {
           AI Resume Improver
         </h2>
         <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-          Paste your existing resume and target role to get an industry-optimized, keyword-rich version that beats the ATS.
+          Paste your existing resume or upload a PDF to get an industry-optimized, keyword-rich version.
         </p>
 
         <form onSubmit={(e) => e.preventDefault()} className="space-y-4 mb-6">
@@ -101,17 +101,42 @@ export default function ResumeImprover() {
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium"
             />
           </div>
+
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-400">
-              Upload Resume (PDF / Text)
+            <label className="text-sm font-medium text-gray-400 flex justify-between items-center">
+              Current Resume
+              <label className="text-xs text-purple-400 cursor-pointer hover:underline flex items-center gap-1">
+                <Upload className="w-3 h-3" />
+                Upload PDF
+                <input type="file" accept=".pdf" className="hidden" onChange={handleFileUpload} />
+              </label>
             </label>
-            <input 
-              type="file" 
-              accept=".pdf,.txt" 
-              onChange={handleImproveUpload}
-              disabled={loading}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium"
+            
+            <textarea
+              placeholder="Paste your current resume content here..."
+              value={resumeText}
+              onChange={(e) => setResumeText(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 h-32 transition-all text-sm font-mono"
             />
+
+            {uploading && (
+                <div className="flex items-center gap-2 text-purple-400 text-sm py-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Extracting PDF...
+                </div>
+            )}
+
+            {pdfText && !uploading && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                    <div className="text-emerald-400 text-xs font-bold mb-1 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        PDF uploaded successfully
+                    </div>
+                    <div className="text-gray-400 text-[10px] line-clamp-2 italic">
+                        Preview: {pdfText.substring(0, 200)}...
+                    </div>
+                </div>
+            )}
           </div>
         </form>
 
@@ -122,12 +147,23 @@ export default function ResumeImprover() {
           </div>
         )}
 
-        {loading && (
-          <div className="flex items-center justify-center py-4 text-purple-400">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            Optimizing Resume...
-          </div>
-        )}
+        <button
+          onClick={handleImprove}
+          disabled={loading || uploading}
+          className="premium-button w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-lg hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Optimizing...
+            </>
+          ) : (
+            <>
+              <Wand2 className="w-5 h-5" />
+              Improve My Resume
+            </>
+          )}
+        </button>
       </div>
 
       {improvedResume && (
