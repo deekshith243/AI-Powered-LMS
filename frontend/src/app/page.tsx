@@ -79,18 +79,6 @@ export default function Home() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 space-y-20">
-        {/* Categories Section */}
-        <div className="flex flex-wrap justify-center gap-3">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              className="px-6 py-2 rounded-full border border-gray-100 bg-gray-50 text-gray-600 font-bold text-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all"
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
         {/* 🚀 AI Career Suite (Restored) */}
         <section className="max-w-7xl mx-auto px-6 py-12 scroll-mt-20">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">🚀 AI Career Suite</h2>
@@ -141,6 +129,18 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* Categories Section */}
+        <div className="flex flex-wrap justify-center gap-3">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              className="px-6 py-2 rounded-full border border-gray-100 bg-gray-50 text-gray-600 font-bold text-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all"
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
 
         {/* Popular Courses */}
         <section id="catalog" className="scroll-mt-20">
