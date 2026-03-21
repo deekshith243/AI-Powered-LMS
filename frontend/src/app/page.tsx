@@ -115,7 +115,7 @@ export default function Home() {
               <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Popular Courses</h2>
               <p className="text-gray-500 font-medium">Start learning from our top-rated tracks</p>
             </div>
-            <Link href="/subjects" className="text-indigo-600 font-bold hover:underline flex items-center gap-1 group text-sm">
+            <Link href="/catalog" className="text-indigo-600 font-bold hover:underline flex items-center gap-1 group text-sm">
               View Entire Catalog
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-all" />
             </Link>
