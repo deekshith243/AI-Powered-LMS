@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PencilLine, Wand2, Loader2, CheckCircle2, AlertCircle, FileEdit, Upload } from 'lucide-react';
+import { PencilLine, Wand2, Loader2, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
 import { extractTextFromPDF } from '@/lib/pdfParser';
 
 const API_URL = "https://lms-backend-prod-3935.onrender.com";
@@ -13,8 +13,6 @@ export default function ResumeImprover() {
   const [improvedResume, setImprovedResume] = useState('');
   const [originalResume, setOriginalResume] = useState('');
   const [loading, setLoading] = useState(false);
-  const [jobDescription, setJobDescription] = useState('');
-  const [isTailorMode, setIsTailorMode] = useState(false);
   const [info, setInfo] = useState('');
   const [uploading, setUploading] = useState(false);
 
@@ -33,10 +31,9 @@ export default function ResumeImprover() {
         throw new Error("Invalid or empty PDF");
       }
 
-      setResumeText(text);   // Sync textarea
+      setResumeText(text);
       setPdfText(text);
       setInfo("✅ Resume uploaded successfully");
-      console.log("PDF text extracted and synchronized to textarea");
     } catch (err: any) {
       console.error("PDF process handled:", err);
       setResumeText("");
@@ -52,12 +49,8 @@ export default function ResumeImprover() {
       alert("Please paste resume or upload PDF");
       return;
     }
-    if (!targetRole && !isTailorMode) {
+    if (!targetRole) {
       setInfo("ℹ️ Please enter a target role");
-      return;
-    }
-    if (isTailorMode && !jobDescription) {
-      setInfo("ℹ️ Please paste the Job Description");
       return;
     }
 
@@ -65,18 +58,13 @@ export default function ResumeImprover() {
     setInfo('');
     
     try {
-      const endpoint = isTailorMode ? '/api/ai/job-match' : '/api/ai/resume-improve';
-      const body = isTailorMode 
-        ? { resumeText: finalText, jobDescription } 
-        : { resumeText: finalText, targetRole };
-
-      const res = await fetch(`${API_URL}${endpoint}`, {
+      const res = await fetch(`${API_URL}/api/ai/resume-improve`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ resumeText: finalText, targetRole })
       });
 
       if (!res.ok) {
@@ -97,56 +85,33 @@ export default function ResumeImprover() {
 
   return (
     <div className="space-y-6">
-      <div className="premium-card p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+      <div className="premium-card p-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
             <PencilLine className="w-6 h-6 text-purple-400" />
-            {isTailorMode ? "AI Resume Tailor" : "AI Resume Improver"}
+            AI Resume Improver
           </h2>
-          <button 
-            onClick={() => {
-              setIsTailorMode(!isTailorMode);
-              setImprovedResume('');
-            }}
-            className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest px-3 py-1 bg-emerald-500/10 rounded-lg border border-emerald-500/20"
-          >
-            Switch to {isTailorMode ? "General Improve" : "Auto Tailor"}
-          </button>
         </div>
         
         <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-          {isTailorMode 
-            ? "Paste the Job Description and your resume to get a perfectly tailored version."
-            : "Paste your existing resume or upload a PDF to get an industry-optimized version."}
+          Paste your existing resume or upload a PDF to get an industry-optimized version for your target role.
         </p>
 
         <form onSubmit={(e) => e.preventDefault()} className="space-y-4 mb-6">
-          {isTailorMode ? (
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400">Job Description (JD)</label>
-              <textarea
-                placeholder="Paste Job Description here..."
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 h-32 transition-all text-sm font-sans"
-              />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400">Target Role</label>
-              <input
-                type="text"
-                placeholder="e.g. Senior Product Manager"
-                value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium"
-              />
-            </div>
-          )}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-400">Target Job Role</label>
+            <input
+              type="text"
+              placeholder="e.g. Senior Product Manager"
+              value={targetRole}
+              onChange={(e) => setTargetRole(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium"
+            />
+          </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-400 flex justify-between items-center">
-              Current Resume
+              Current Resume Content
               <label className="text-xs text-purple-400 cursor-pointer hover:underline flex items-center gap-1">
                 <Upload className="w-3 h-3" />
                 Upload PDF
@@ -156,14 +121,14 @@ export default function ResumeImprover() {
             
 
             <textarea
-              placeholder="Paste your current resume content here (recommended if PDF upload fails)..."
+              placeholder="Paste your current resume content here..."
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 h-32 transition-all text-sm font-mono"
             />
 
             <div className="flex justify-between items-center text-[10px] text-gray-400 px-1 italic">
-              <span>Tip: Copy your resume from Word for best results</span>
+              <span>Tip: AI works best with clear, structured text</span>
               <button 
                 type="button"
                 onClick={() => {
@@ -173,7 +138,7 @@ export default function ResumeImprover() {
                 }}
                 className="text-purple-400 hover:underline font-bold"
               >
-                ✍️ Paste Instead
+                ✍️ Clear All
               </button>
             </div>
 
@@ -189,9 +154,6 @@ export default function ResumeImprover() {
                     <div className="text-emerald-400 text-xs font-bold mb-1 flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" />
                         PDF uploaded successfully
-                    </div>
-                    <div className="text-gray-400 text-[10px] line-clamp-2 italic">
-                        Preview: {pdfText.substring(0, 200)}...
                     </div>
                 </div>
             )}
