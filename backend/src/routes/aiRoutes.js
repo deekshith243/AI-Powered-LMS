@@ -1,4 +1,6 @@
 const express = require('express');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 const { 
   generateSummary, 
   chatTutor, 
@@ -11,7 +13,8 @@ const {
   analyzeATS,
   improveResume,
   startInterview,
-  evaluateInterview
+  evaluateInterview,
+  extractPDF
 } = require('../controllers/aiController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
@@ -29,5 +32,6 @@ router.post('/ats', authMiddleware, analyzeATS);
 router.post('/resume-improve', authMiddleware, improveResume);
 router.post('/interview/start', authMiddleware, startInterview);
 router.post('/interview/evaluate', authMiddleware, evaluateInterview);
+router.post('/extract-pdf', authMiddleware, upload.single('file'), extractPDF);
 
 module.exports = router;

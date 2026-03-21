@@ -49,9 +49,24 @@ export default function ATSAnalyzer() {
     setUploading(true);
     setError('');
     try {
-      const text = await file.text();
-      setResumeText(text);
-      console.log("File uploaded and text extracted");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`${API_URL}/api/ai/extract-pdf`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: formData
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to extract PDF text from backend");
+      }
+
+      const data = await res.json();
+      setResumeText(data.text);
+      console.log("File uploaded and text extracted via backend");
     } catch (err: any) {
       setError(err.message || 'Failed to extract text from file.');
     } finally {

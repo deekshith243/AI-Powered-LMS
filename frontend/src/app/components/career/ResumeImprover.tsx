@@ -25,11 +25,29 @@ export default function ResumeImprover() {
     setError('');
     
     try {
-      const text = await file.text();
+      // 1. Extract text via backend
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const extractRes = await fetch(`${API_URL}/api/ai/extract-pdf`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: formData
+      });
+
+      if (!extractRes.ok) {
+        throw new Error("Failed to extract PDF text");
+      }
+
+      const extractData = await extractRes.json();
+      const text = extractData.text;
+
       console.log("--- Improving Resume ---");
       console.log("Sending role:", targetRole);
-      console.log(`Endpoint: ${API_URL}/api/ai/resume-improve`);
-
+      
+      // 2. Improve resume
       const res = await fetch(`${API_URL}/api/ai/resume-improve`, {
         method: "POST",
         headers: {
@@ -43,16 +61,15 @@ export default function ResumeImprover() {
       });
 
       if (!res.ok) {
-        console.error("API error");
-        alert("Something went wrong");
-        throw new Error("API error");
+        console.error("Improve API error");
+        alert("Improvement API failed");
+        throw new Error("Improvement API failed");
       }
 
       const data = await res.json();
-      console.log("Improve Response:", data);
       setImprovedResume(data.improved_resume);
       setOriginalResume(text);
-      setResumeText(text); // Keep this for consistency if needed elsewhere
+      setResumeText(text);
     } catch (err: any) {
       console.error("Improve Error:", err);
       setError(err.message || 'Failed to improve resume. Please try again.');

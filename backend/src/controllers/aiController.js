@@ -1,10 +1,11 @@
 const pool = require('../config/db');
 const Groq = require('groq-sdk');
 require('dotenv').config();
+const pdf = require('pdf-parse');
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
-  timeout: 30000
+  timeout: 60000
 });
 
 // ─── SUMMARY ─────────────────────────────────────────────
@@ -311,6 +312,9 @@ exports.improveResume = async (req, res) => {
   console.log("Improve API HIT");
   try {
     const { resumeText, targetRole } = req.body;
+    if (!resumeText) {
+      return res.status(400).json({ error: "Resume text missing" });
+    }
     if (!targetRole) {
       return res.status(400).json({ error: "Target role required" });
     }
@@ -319,9 +323,10 @@ exports.improveResume = async (req, res) => {
       return res.status(500).json({ error: "AI not configured" });
     }
 
+    const trimmedText = resumeText.substring(0, 3000);
     const prompt = `Improve this resume for the role of ${targetRole}. 
 Optimize keywords and professional tone.
-Resume: ${resumeText}`;
+Resume: ${trimmedText}`;
 
     const completion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
@@ -331,7 +336,7 @@ Resume: ${resumeText}`;
     const output = completion.choices[0]?.message?.content || "Resume improvement failed.";
     return res.json({ improved_resume: output });
   } catch (err) {
-    console.error("GROQ ERROR (Improve):", err.message);
+    console.error("Improve Error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -385,5 +390,19 @@ Return ONLY a valid JSON object:
   } catch (err) {
     console.error("GROQ ERROR (Evaluate):", err.message);
     return res.status(500).json({ score: 0, feedback: "Evaluation failed." });
+  }
+};
+
+// ─── PDF TEXT EXTRACTION ────────────────────────────────
+exports.extractPDF = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    const data = await pdf(req.file.buffer);
+    return res.json({ text: data.text });
+  } catch (err) {
+    console.error("PDF Extraction Error:", err);
+    return res.status(500).json({ error: "Failed to extract PDF text" });
   }
 };

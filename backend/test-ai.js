@@ -1,29 +1,35 @@
 const aiController = require('./src/controllers/aiController');
 
 async function test() {
-  const req = {
-    body: {
-      role: "React Developer",
-      name: "Test User",
-      skills: "React, Node.js, TypeScript"
-    }
-  };
   const res = {
     json: (data) => console.log("SUCCESS:", JSON.stringify(data, null, 2)),
-    status: (code) => ({ json: (data) => console.log("ERROR", code, data) })
-  };
-
-  console.log("Testing generateResume...");
-  await aiController.generateResume(req, res);
-
-  console.log("\nTesting analyzeATS...");
-  const atsReq = {
-    body: {
-      resumeText: "Experienced React Developer with 5 years in Node.js",
-      targetRole: "Senior Frontend Engineer"
+    status: (code) => {
+      console.log("STATUS CODE:", code);
+      return { json: (data) => console.log("RESPONSE:", JSON.stringify(data, null, 2)) };
     }
   };
-  await aiController.analyzeATS(atsReq, res);
+
+  console.log("--- Testing generateResume ---");
+  await aiController.generateResume({ body: { role: "React Developer" } }, res);
+
+  console.log("\n--- Testing generateResume (Missing Role) ---");
+  await aiController.generateResume({ body: {} }, res);
+
+  console.log("\n--- Testing analyzeATS ---");
+  await aiController.analyzeATS({ 
+    body: { 
+      resumeText: "Experienced React Developer", 
+      targetRole: "Senior Engineer" 
+    } 
+  }, res);
+
+  console.log("\n--- Testing improveResume ---");
+  await aiController.improveResume({ 
+    body: { 
+      resumeText: "React Dev with 5 years exp", 
+      targetRole: "Frontend lead" 
+    } 
+  }, res);
 }
 
 test();
