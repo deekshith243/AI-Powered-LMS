@@ -28,8 +28,10 @@ router.post('/career', authMiddleware, generateCareerPath);
 router.get('/recommendations/:userId', authMiddleware, getRecommendations);
 router.post('/search', authMiddleware, searchLessons);
 router.post('/resume', authMiddleware, generateResume);
+router.post('/generate-resume', generateResume);
 router.post('/ats', analyzeATS);
 router.post('/resume-improve', authMiddleware, improveResume);
+router.post('/improve-resume', improveResume);
 router.post('/interview/start', authMiddleware, startInterview);
 router.post('/interview/evaluate', authMiddleware, evaluateInterview);
 

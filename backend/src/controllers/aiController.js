@@ -312,11 +312,11 @@ Return ONLY the improved resume text. Professional tone. No preamble.`;
 
     if (!aiText) throw new Error("AI failed to improve resume");
 
-    return res.json({ improved_resume: aiText });
+    return res.json({ improved: aiText });
   } catch (err) {
     console.error("IMPROVE ERROR:", err.message);
     return res.json({ 
-      improved_resume: "Professional Resume\n\n(AI service temporarily limited. Please review your resume for formatting and keywords.)" 
+      improved: "Professional Resume\n\n(AI service temporarily limited. Please review your resume for formatting and keywords.)" 
     });
   }
 };

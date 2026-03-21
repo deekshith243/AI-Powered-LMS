@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import { FileText, Download, Wand2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 
-const API_URL = "https://lms-backend-prod-3935.onrender.com";
-
 export default function ResumeGenerator() {
   const [role, setRole] = useState('');
   const [name, setName] = useState('');
@@ -14,9 +12,6 @@ export default function ResumeGenerator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
  
-  // Debug log for role
-  console.log("Resume Role:", role);
-
   const handleGenerate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!role) {
@@ -27,31 +22,19 @@ export default function ResumeGenerator() {
     setLoading(true);
     setError('');
     
-    console.log("--- Generating Resume ---");
-    console.log("Sending role:", role);
-    console.log("User Name:", name);
-    console.log("Skills:", skills);
-    console.log(`Endpoint: ${API_URL}/api/ai/resume`);
-
     try {
-      const res = await fetch(`${API_URL}/api/ai/resume`, {
+      const res = await fetch("/api/ai/generate-resume", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ role, name, skills })
       });
 
-      if (!res.ok) {
-        console.error("API error");
-        alert("Something went wrong");
-        throw new Error("API error");
-      }
+      if (!res.ok) throw new Error("API error generating resume");
 
       const data = await res.json();
-      console.log("Resume Result:", data);
-      setResume(data.resume);
+      setResume(data.resume || "Failed to generate resume content.");
     } catch (err: any) {
       console.error("API Error generating resume:", err);
       setError(err.message || 'Failed to generate resume. Please try again.');
@@ -84,10 +67,7 @@ export default function ResumeGenerator() {
               type="text"
               placeholder="e.g. Full Stack Developer"
               value={role}
-              onChange={(e) => {
-                console.log("Typing role:", e.target.value);
-                setRole(e.target.value);
-              }}
+              onChange={(e) => setRole(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
             />
           </div>
