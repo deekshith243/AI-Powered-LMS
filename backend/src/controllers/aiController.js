@@ -3,7 +3,8 @@ const Groq = require('groq-sdk');
 require('dotenv').config();
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
+  apiKey: process.env.GROQ_API_KEY,
+  timeout: 30000
 });
 
 // ─── SUMMARY ─────────────────────────────────────────────
@@ -233,8 +234,17 @@ exports.searchLessons = async (req, res) => {
 
 // ─── RESUME GENERATOR ────────────────────────────────────
 exports.generateResume = async (req, res) => {
+  console.log("Resume API HIT");
   try {
     const { role, name, skills } = req.body;
+    if (!role) {
+      return res.status(400).json({ error: "Role required" });
+    }
+    if (!process.env.GROQ_API_KEY) {
+      console.error("Missing GROQ key");
+      return res.status(500).json({ error: "AI not configured" });
+    }
+
     const prompt = `Generate a professional resume for a ${role}. 
 Name: ${name || 'N/A'}
 Skills: ${skills || 'N/A'}
@@ -245,18 +255,27 @@ Provide a structured, clean resume in plain text.`;
       model: "llama-3.3-70b-versatile",
     });
 
-    const resume = completion.choices[0]?.message?.content || "Resume generation failed.";
-    return res.json({ resume });
+    const output = completion.choices[0]?.message?.content || "Resume generation failed.";
+    return res.json({ resume: output });
   } catch (err) {
     console.error("GROQ ERROR (Resume):", err.message);
-    return res.status(500).json({ resume: "Failed to generate resume." });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // ─── ATS ANALYZER ───────────────────────────────────────
 exports.analyzeATS = async (req, res) => {
+  console.log("ATS API HIT");
   try {
     const { resumeText, targetRole } = req.body;
+    if (!targetRole) {
+      return res.status(400).json({ error: "Target role required" });
+    }
+    if (!process.env.GROQ_API_KEY) {
+      console.error("Missing GROQ key");
+      return res.status(500).json({ error: "AI not configured" });
+    }
+
     const prompt = `Analyze this resume for the role of ${targetRole}.
 Resume Content: ${resumeText}
 
@@ -275,17 +294,31 @@ Return ONLY a valid JSON object:
     });
 
     const stats = JSON.parse(completion.choices[0]?.message?.content);
-    return res.json(stats);
+    return res.json({
+      score: stats.score || 75,
+      missing_skills: stats.missing_skills || [],
+      suggestions: stats.suggestions || [],
+      required_skills: stats.required_skills || []
+    });
   } catch (err) {
     console.error("GROQ ERROR (ATS):", err.message);
-    return res.status(500).json({ score: 0, missing_skills: [], suggestions: [], required_skills: [] });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // ─── RESUME IMPROVER ─────────────────────────────────────
 exports.improveResume = async (req, res) => {
+  console.log("Improve API HIT");
   try {
     const { resumeText, targetRole } = req.body;
+    if (!targetRole) {
+      return res.status(400).json({ error: "Target role required" });
+    }
+    if (!process.env.GROQ_API_KEY) {
+      console.error("Missing GROQ key");
+      return res.status(500).json({ error: "AI not configured" });
+    }
+
     const prompt = `Improve this resume for the role of ${targetRole}. 
 Optimize keywords and professional tone.
 Resume: ${resumeText}`;
@@ -295,11 +328,11 @@ Resume: ${resumeText}`;
       model: "llama-3.3-70b-versatile",
     });
 
-    const improved = completion.choices[0]?.message?.content || "Resume improvement failed.";
-    return res.json({ improved_resume: improved });
+    const output = completion.choices[0]?.message?.content || "Resume improvement failed.";
+    return res.json({ improved_resume: output });
   } catch (err) {
     console.error("GROQ ERROR (Improve):", err.message);
-    return res.status(500).json({ improved_resume: "Failed to improve resume." });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
