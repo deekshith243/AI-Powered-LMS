@@ -165,19 +165,7 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Footer-like CTA */}
-      <div className="bg-gray-900 py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to start your journey?</h2>
-          <p className="text-gray-400 text-lg mb-10 font-medium">Join thousands of students and build the future you've always dreamed of.</p>
-          <Link
-            href="/register"
-            className="inline-block px-12 py-5 bg-white text-gray-900 font-extrabold rounded-2xl text-xl hover:bg-gray-100 transition-all shadow-2xl"
-          >
-            Create Your Account
-          </Link>
-        </div>
-      </div>
+
     </div>
   );
 }
