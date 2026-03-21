@@ -2,6 +2,7 @@ const pool = require('../config/db');
 const Groq = require('groq-sdk');
 require('dotenv').config();
 const fs = require('fs');
+const callGroq = require('../utils/groq');
 
 const groqKey = process.env.GROQ_API_KEY || "test_key";
 let groq;
@@ -211,21 +212,21 @@ exports.generateResume = async (req, res) => {
     const { role, name, skills } = req.body;
     if (!role) return res.status(400).json({ error: "Role required" });
 
-    const prompt = `Generate a professional resume for a ${role}. 
-Name: ${name || 'N/A'}
-Skills: ${skills || 'N/A'}
-Provide a structured, clean resume in plain text.`;
+    const prompt = `Generate a professional, high-quality resume for a ${role}. 
+Name: ${name || 'Professional Candidate'}
+Skills: ${skills || 'Relevant industry skills'}
+Provide a structured, clean resume in plain text with clear sections for Summary, Experience, and Education.`;
 
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "llama-3.3-70b-versatile",
-    });
+    const aiText = await callGroq(prompt);
 
-    const output = completion.choices[0]?.message?.content || "Resume generation failed.";
-    return res.json({ resume: output });
+    if (!aiText) throw new Error("AI failed to generate resume");
+
+    return res.json({ resume: aiText });
   } catch (err) {
-    console.error("GROQ ERROR (Resume):", err.message);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("GENERATOR ERROR (Resume):", err.message);
+    return res.json({ 
+      resume: "A professional resume for " + (req.body.name || "Manager") + ".\n\nSummary: Experienced professional with a background in " + (req.body.role || "Technology") + ".\nSkills: " + (req.body.skills || "Communication, Leadership") + "\n\n(AI generation temporarily limited. Please try again soon.)" 
+    });
   }
 };
 
@@ -253,7 +254,7 @@ ${targetRole}
 RESUME:
 ${resumeText}
 
-Return a valid JSON object only. No preamble.
+Return a valid JSON object ONLY. No preamble or conversational text.
 Format:
 {
   "score": 0-100,
@@ -261,24 +262,17 @@ Format:
   "missing_skills": ["skillA", "skillB"],
   "suggestions": ["suggestion1", "suggestion2"]
 }
-
-Guidelines:
-- Score based on skill relevance, experience match, and keywords.
-- Only return 0 if the resume is completely empty or irrelevant.
-- "matched_skills" should include relevant skills found in the resume for this role.
-- "missing_skills" should be critical skills expected for this role but missing in the resume.
-- "suggestions" must be actionable for the candidate.
 `;
 
-    try {
-      const completion = await groq.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "llama-3.3-70b-versatile",
-        temperature: 0.3,
-        response_format: { type: "json_object" }
-      });
+    const aiText = await callGroq(prompt);
 
-      const result = JSON.parse(completion.choices[0]?.message?.content || "{}");
+    if (!aiText) throw new Error("AI failed to analyze ATS");
+
+    try {
+      const jsonStart = aiText.indexOf("{");
+      const jsonEnd = aiText.lastIndexOf("}") + 1;
+      const jsonStr = aiText.slice(jsonStart, jsonEnd);
+      const result = JSON.parse(jsonStr);
       
       return res.json({
         score: result.score ?? 70,
@@ -286,25 +280,18 @@ Guidelines:
         missing_skills: result.missing_skills ?? [],
         suggestions: result.suggestions ?? ["Optimize your resume for keywords"]
       });
-
-    } catch (groqErr) {
-      console.error("GROQ ERROR (ATS AI):", groqErr.message);
-      // Fallback to basic scoring if Groq fails
-      return res.json({
-        score: 65,
-        matched_skills: ["General Technical Skills"],
-        missing_skills: ["Specific Role-Based Skills"],
-        suggestions: ["AI analysis temporarily limited. Try again later for more detail."]
-      });
+    } catch (parseErr) {
+      console.error("JSON Parse Error (ATS):", parseErr.message);
+      throw new Error("Invalid AI response format");
     }
 
   } catch (error) {
     console.error("ATS API ERROR:", error);
-    return res.status(500).json({
-      score: 0,
-      matched_skills: [],
-      missing_skills: [],
-      suggestions: ["Server error. Please try again later."]
+    return res.json({
+      score: 65,
+      matched_skills: ["Analysis"],
+      missing_skills: ["Advanced Frameworks"],
+      suggestions: ["AI scoring temporarily limited. Use keywords from the job description."]
     });
   }
 };
@@ -315,18 +302,22 @@ exports.improveResume = async (req, res) => {
     const { resumeText, targetRole } = req.body;
     if (!resumeText) return res.status(400).json({ error: "Resume text missing" });
 
-    const prompt = `Improve this resume for the role of ${targetRole}. Resume: ${resumeText}`;
+    const prompt = `Improve this professional resume for the role of ${targetRole || 'industry expert'}. 
+Resume: 
+${resumeText}
 
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "llama-3.3-70b-versatile",
-    });
+Return ONLY the improved resume text. Professional tone. No preamble.`;
 
-    const output = completion.choices[0]?.message?.content || "Resume improvement failed.";
-    return res.json({ improved_resume: output });
+    const aiText = await callGroq(prompt);
+
+    if (!aiText) throw new Error("AI failed to improve resume");
+
+    return res.json({ improved_resume: aiText });
   } catch (err) {
-    console.error("Improve Error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("IMPROVE ERROR:", err.message);
+    return res.json({ 
+      improved_resume: "Professional Resume\n\n(AI service temporarily limited. Please review your resume for formatting and keywords.)" 
+    });
   }
 };
 
