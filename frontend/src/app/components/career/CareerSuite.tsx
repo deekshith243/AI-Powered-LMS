@@ -19,11 +19,11 @@ export default function CareerSuite() {
 
   React.useEffect(() => {
     // Check pathname first
-    if (pathname.includes('/dashboard/resume')) setActiveTab('resume');
-    else if (pathname.includes('/dashboard/ats')) setActiveTab('ats');
-    else if (pathname.includes('/dashboard/improve')) setActiveTab('improve');
-    else if (pathname.includes('/dashboard/mock')) setActiveTab('interview');
-    else if (pathname.includes('/dashboard/career-path')) setActiveTab('path');
+    if (pathname.includes('/resume')) setActiveTab('resume');
+    else if (pathname.includes('/ats')) setActiveTab('ats');
+    else if (pathname.includes('/improve')) setActiveTab('improve');
+    else if (pathname.includes('/mock')) setActiveTab('interview');
+    else if (pathname.includes('/career-path')) setActiveTab('path');
     else {
       // Fallback to search params for backward compatibility
       const tab = searchParams.get('tab');
