@@ -49,7 +49,7 @@ export default function Home() {
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-white pt-16 pb-32">
+      <div className="relative overflow-hidden bg-white pt-16 pb-16">
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
         <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-96 h-96 bg-purple-50 rounded-full blur-3xl opacity-50"></div>
 
@@ -78,10 +78,10 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 space-y-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 space-y-10">
         {/* 🚀 AI Career Suite (Restored) */}
-        <section className="max-w-7xl mx-auto px-6 py-12 scroll-mt-20">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">🚀 AI Career Suite</h2>
+        <section className="max-w-7xl mx-auto px-6 py-6 scroll-mt-10">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">🚀 AI Career Suite</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
             <div className="p-6 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
               <h3 className="font-bold text-lg mb-1">Resume Generator</h3>
@@ -131,7 +131,7 @@ export default function Home() {
         </section>
 
         {/* Categories Section */}
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3 mt-6 mb-6">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -143,8 +143,8 @@ export default function Home() {
         </div>
 
         {/* Popular Courses */}
-        <section id="catalog" className="scroll-mt-20">
-          <div className="flex items-center justify-between mb-10">
+        <section id="catalog" className="scroll-mt-10 mt-8">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Popular Courses</h2>
               <p className="text-gray-500 font-medium">Start learning from our top-rated tracks</p>
