@@ -6,11 +6,14 @@ router.get("/", async (req, res) => {
   try {
     const pages = [1, 2, 3, 4]; // 4 pages = ~200 jobs potentially (up to 50 per page)
 
+    const appId = process.env.ADZUNA_APP_ID || "test_id";
+    const appKey = process.env.ADZUNA_APP_KEY || "test_key";
+
     const requests = pages.map((page) =>
       axios.get(`https://api.adzuna.com/v1/api/jobs/in/search/${page}`, {
         params: {
-          app_id: process.env.ADZUNA_APP_ID,
-          app_key: process.env.ADZUNA_APP_KEY,
+          app_id: appId,
+          app_key: appKey,
           results_per_page: 50,
           what: "developer OR engineer OR data OR AI OR ML OR cloud OR devops OR python",
           sort_by: "date"

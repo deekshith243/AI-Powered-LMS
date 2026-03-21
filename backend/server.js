@@ -71,9 +71,13 @@ app.use('/api/courses/enroll', enrollmentRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/job-tracker', jobTrackerRoutes);
 
+// Route Aliases for deployment stability
+app.use('/api/jobs/apply', jobTrackerRoutes);
+app.use('/api/jobs/applied', jobTrackerRoutes);
+
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong on the server' });
+  console.error("GLOBAL ERROR:", err.message);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
 const PORT = process.env.PORT || 5000;

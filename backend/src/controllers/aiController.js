@@ -3,10 +3,16 @@ const Groq = require('groq-sdk');
 require('dotenv').config();
 const fs = require('fs');
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-  timeout: 60000
-});
+const groqKey = process.env.GROQ_API_KEY || "test_key";
+let groq;
+try {
+  groq = new Groq({
+    apiKey: groqKey,
+    timeout: 60000
+  });
+} catch (e) {
+  console.error("GROQ Init Error (Safe Fallback):", e.message);
+}
 
 // ─── SUMMARY ─────────────────────────────────────────────
 exports.generateSummary = async (req, res) => {
