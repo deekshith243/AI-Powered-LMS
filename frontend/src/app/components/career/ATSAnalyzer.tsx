@@ -62,29 +62,33 @@ export default function ATSAnalyzer() {
     setInfo('');
     
     try {
-      const endpoint = isJobMatchMode ? '/api/ai/job-match' : '/api/ai/ats';
-      const body = isJobMatchMode 
-        ? { resumeText: finalText, jobDescription } 
-        : { resumeText: finalText, targetRole };
-
-      const res = await fetch(`${API_URL}${endpoint}`, {
+      const res = await fetch(`${API_URL}/api/ai/ats`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify({
+          resumeText: finalText,
+          targetRole
+        })
       });
 
-      if (!res.ok) {
-        throw new Error("ATS API failed. Please check your connection or try again later.");
+      const data = await res.json();
+
+      if (!data) {
+        throw new Error("Invalid response");
       }
 
-      const data = await res.json();
-      setStats(data);
+      setStats({
+        score: data.score || 0,
+        missing_skills: data.missing_skills || [],
+        suggestions: data.suggestions || [],
+        required_skills: data.required_skills || []
+      });
+
     } catch (err: any) {
-      console.error("ATS Error:", err);
-      setInfo(err?.message || "ℹ️ Analysis failed. Please try again or check your connection.");
+      console.error("ATS Frontend Error:", err);
+      setInfo("Failed to analyze resume. Please try again.");
     } finally {
       setLoading(false);
     }
