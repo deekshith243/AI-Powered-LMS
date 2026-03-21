@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { PencilLine, Wand2, Loader2, CheckCircle2, AlertCircle, FileEdit, Upload } from 'lucide-react';
-import { extractTextFromPDF } from '../../utils/pdfUtils';
+import { extractTextFromPDF } from '@/lib/pdfParser';
 
 const API_URL = "https://lms-backend-prod-3935.onrender.com";
 

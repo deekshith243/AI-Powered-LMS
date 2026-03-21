@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ShieldCheck, Upload, Loader2, CheckCircle2, AlertCircle, TrendingUp, Search } from 'lucide-react';
-import { extractTextFromPDF } from '../../utils/pdfUtils';
+import { extractTextFromPDF } from '@/lib/pdfParser';
 
 const API_URL = "https://lms-backend-prod-3935.onrender.com";
 
@@ -16,7 +16,7 @@ interface ATSStats {
 export default function ATSAnalyzer() {
   const [targetRole, setTargetRole] = useState('');
   const [resumeText, setResumeText] = useState('');
-  const [extractedText, setExtractedText] = useState('');
+  const [pdfText, setPdfText] = useState('');
   const [stats, setStats] = useState<ATSStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +30,7 @@ export default function ATSAnalyzer() {
     setError('');
     try {
       const text = await extractTextFromPDF(file);
-      setExtractedText(text);
+      setPdfText(text);
       console.log("PDF text extracted locally via frontend");
     } catch (err: any) {
       setError(err.message || 'Failed to extract text from file.');
@@ -41,7 +41,7 @@ export default function ATSAnalyzer() {
 
   const handleAnalyze = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const finalText = resumeText || extractedText;
+    const finalText = resumeText || pdfText;
     if (!targetRole || !finalText) return setError('Please enter target role and provide resume (paste or PDF).');
     
     setLoading(true);
@@ -119,14 +119,14 @@ export default function ATSAnalyzer() {
                 </div>
             )}
 
-            {extractedText && !uploading && (
+            {pdfText && !uploading && (
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                     <div className="text-emerald-400 text-xs font-bold mb-1 flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" />
                         PDF uploaded successfully
                     </div>
                     <div className="text-gray-400 text-[10px] line-clamp-2 italic">
-                        Preview: {extractedText.substring(0, 200)}...
+                        Preview: {pdfText.substring(0, 200)}...
                     </div>
                 </div>
             )}

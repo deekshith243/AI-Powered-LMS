@@ -1,11 +1,12 @@
 const express = require('express');
-const { 
-  generateSummary, 
-  chatTutor, 
-  generateQuiz, 
-  getRecommendations, 
-  searchLessons, 
-  askDoubt, 
+
+const {
+  generateSummary,
+  chatTutor,
+  generateQuiz,
+  getRecommendations,
+  searchLessons,
+  askDoubt,
   generateCareerPath,
   generateResume,
   analyzeATS,
