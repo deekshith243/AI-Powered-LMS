@@ -65,6 +65,8 @@ export default function Navbar() {
     router.replace('/login');
   };
 
+  const isAuthPage = ['/login', '/register'].includes(pathname);
+
   if (!mounted) return null;
 
   return (
@@ -75,51 +77,52 @@ export default function Navbar() {
             <Link href="/" className="flex-shrink-0 flex items-center text-xl font-bold tracking-tight text-indigo-700">
               AI-Powered LMS
             </Link>
-            {/* Removed Explore Catalog from here */}
           </div>
           
           {/* Desktop Right Nav & Search */}
           <div className="hidden sm:flex sm:items-center sm:space-x-4">
             
-            {/* Semantic Search Box */}
-            <div className="relative mr-4" ref={searchRef}>
-               <div className="relative flex items-center">
-                  <Search className="absolute left-3 w-4 h-4 text-gray-400" />
-                  <input 
-                     type="text" 
-                     placeholder="AI Search lessons..." 
-                     value={searchTerm}
-                     onChange={(e) => setSearchTerm(e.target.value)}
-                     className="pl-9 pr-4 py-1.5 w-64 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-gray-800"
-                  />
-                  {isSearching && <Loader2 className="absolute right-3 w-4 h-4 text-indigo-500 animate-spin" />}
-               </div>
-               
-               {/* Search Dropdown Results */}
-               {showDropdown && (
-                  <div className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 py-2">
-                     {searchResults.length > 0 ? (
-                        searchResults.map(result => (
-                           <Link 
-                              key={result.id} 
-                              href={`/learn/${result.subject_id}/${result.id}`}
-                              onClick={() => setShowDropdown(false)}
-                              className="block px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0"
-                           >
-                              <p className="text-sm font-semibold text-gray-900 line-clamp-1">{result.title}</p>
-                              <p className="text-xs text-gray-500 line-clamp-1">{result.subject_title}</p>
-                           </Link>
-                        ))
-                     ) : (
-                        <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                           No lessons found.
-                        </div>
-                     )}
-                  </div>
-               )}
-            </div>
+            {/* Semantic Search Box - HIDDEN ON AUTH PAGES */}
+            {!isAuthPage && (
+              <div className="relative mr-4" ref={searchRef}>
+                 <div className="relative flex items-center">
+                    <Search className="absolute left-3 w-4 h-4 text-gray-400" />
+                    <input 
+                       type="text" 
+                       placeholder="AI Search lessons..." 
+                       value={searchTerm}
+                       onChange={(e) => setSearchTerm(e.target.value)}
+                       className="pl-9 pr-4 py-1.5 w-64 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-gray-800"
+                    />
+                    {isSearching && <Loader2 className="absolute right-3 w-4 h-4 text-indigo-500 animate-spin" />}
+                 </div>
+                 
+                 {/* Search Dropdown Results */}
+                 {showDropdown && (
+                    <div className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 py-2">
+                       {searchResults.length > 0 ? (
+                          searchResults.map(result => (
+                             <Link 
+                                key={result.id} 
+                                href={`/learn/${result.subject_id}/${result.id}`}
+                                onClick={() => setShowDropdown(false)}
+                                className="block px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0"
+                             >
+                                <p className="text-sm font-semibold text-gray-900 line-clamp-1">{result.title}</p>
+                                <p className="text-xs text-gray-500 line-clamp-1">{result.subject_title}</p>
+                             </Link>
+                          ))
+                       ) : (
+                          <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                             No lessons found.
+                          </div>
+                       )}
+                    </div>
+                 )}
+              </div>
+            )}
 
-            {isAuthenticated && (
+            {!isAuthPage && isAuthenticated && (
               <Link href="/catalog">
                 <button
                   className={`mr-2 px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition shadow-md shadow-indigo-100 ${
@@ -131,7 +134,7 @@ export default function Navbar() {
               </Link>
             )}
 
-            {isAuthenticated && (
+            {!isAuthPage && isAuthenticated && (
                 <button
                 onClick={() => router.push("/jobs")}
                 className="mr-2 px-4 py-1.5 text-sm font-bold text-white bg-purple-600 rounded-full hover:bg-purple-700 transition shadow-md shadow-purple-100"
@@ -140,7 +143,7 @@ export default function Navbar() {
                 </button>
             )}
 
-            {isAuthenticated && (
+            {!isAuthPage && isAuthenticated && (
               <button
                 onClick={() => router.push("/profile")}
                 className="hidden md:flex items-center px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition shadow-md shadow-indigo-100 mr-2"
@@ -194,21 +197,25 @@ export default function Navbar() {
         <div className="sm:hidden bg-white border-b border-gray-100 shadow-md">
           {isAuthenticated ? (
             <div className="pt-2 pb-3 space-y-1">
-              <Link 
-                href="/subjects"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-indigo-500"
-              >
-                Explore Catalog
-              </Link>
-              <Link 
-                href="/profile"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-indigo-500"
-              >
-                My Profile
-              </Link>
-              {isAuthenticated && (
+              {!isAuthPage && isAuthenticated && (
+                <Link 
+                  href="/subjects"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-indigo-500"
+                >
+                  Explore Catalog
+                </Link>
+              )}
+              {!isAuthPage && isAuthenticated && (
+                <Link 
+                  href="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-indigo-500"
+                >
+                  My Profile
+                </Link>
+              )}
+              {!isAuthPage && isAuthenticated && (
                   <Link 
                     href="/jobs"
                     onClick={() => setIsMobileMenuOpen(false)}
