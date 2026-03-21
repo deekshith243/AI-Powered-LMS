@@ -8,12 +8,19 @@ import Link from 'next/link';
 import { BookOpen, AlertCircle, Sparkles, Download, BarChart2, Award, Zap, Eye, BrainCircuit, ChevronRight, Briefcase, FileText, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
-// AI Career Suite Components
-import ResumeGenerator from '../components/career/ResumeGenerator';
-import ATSAnalyzer from '../components/career/ATSAnalyzer';
-import ResumeImprover from '../components/career/ResumeImprover';
-import MockInterview from '../components/career/MockInterview';
-import CareerPathGenerator from '../components/career/CareerPathGenerator';
+import dynamic from 'next/dynamic';
+
+const CareerSuite = dynamic(() => import('../components/career/CareerSuite'), { 
+  ssr: false,
+  loading: () => (
+    <div className="h-64 flex items-center justify-center bg-gray-50 rounded-2xl border border-gray-100">
+      <div className="flex flex-col items-center gap-3">
+        <Sparkles className="w-8 h-8 text-indigo-400 animate-pulse" />
+        <p className="text-gray-400 font-medium">Loading AI Career Suite...</p>
+      </div>
+    </div>
+  )
+});
 
 interface UserProfile {
   name: string;
@@ -43,7 +50,6 @@ export default function Profile() {
   const [recLoading, setRecLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloadingCert, setDownloadingCert] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState('resume');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -305,25 +311,8 @@ export default function Profile() {
       </div>
 
       {/* 🚀 AI Career Suite Section */}
-      <div id="ai-career-suite" key={activeTab} className="mt-16 mb-12 p-8 bg-white rounded-2xl border-4 border-indigo-500 shadow-2xl animate-fade-in">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">🚀 AI Career Suite</h2>
-        <div className="flex flex-wrap gap-4 mb-6">
-          <button onClick={() => setActiveTab("resume")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'resume' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>Resume</button>
-          <button onClick={() => setActiveTab("ats")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'ats' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>ATS Score</button>
-          <button onClick={() => setActiveTab("improve")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'improve' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>Improve Resume</button>
-          <button onClick={() => setActiveTab("interview")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'interview' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>Mock Interview</button>
-          <button onClick={() => setActiveTab("career")} className={`px-6 py-3 rounded-xl font-bold border-2 ${activeTab === 'career' ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>Career Path</button>
-        </div>
-        
-        <p className="text-lg font-bold text-indigo-600 mb-6">Active Tab: {activeTab}</p>
-        
-        <div className="min-h-[300px] border-t border-gray-100 pt-8">
-          {activeTab === "resume" && <ResumeGenerator />}
-          {activeTab === "ats" && <ATSAnalyzer />}
-          {activeTab === "improve" && <ResumeImprover />}
-          {activeTab === "interview" && <MockInterview />}
-          {activeTab === "career" && <CareerPathGenerator />}
-        </div>
+      <div id="ai-career-suite" className="mt-16 mb-12 animate-fade-in">
+        <CareerSuite />
       </div>
 
       {/* AI Recommendations */}
