@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Sparkles, MapPin, Briefcase, IndianRupee, ExternalLink, Filter, Loader2 } from 'lucide-react';
+import { Sparkles, MapPin, Briefcase, IndianRupee, ExternalLink, Filter } from 'lucide-react';
 import api from '@/lib/api';
 
 const CATEGORIES = ["All", "Developer", "Data", "AI/ML", "Cloud"];
@@ -16,81 +16,18 @@ export default function PlacementsPage() {
       const res = await api.get('/jobs');
       const data = res.data;
       let results = data.results || [];
-      
-      // FALLBACK (Step 4)
-      if (!results || results.length === 0) {
-        results = [
-          {
-            id: 1,
-            title: "Software Engineer",
-            company: { display_name: "Google" },
-            location: { display_name: "Bangalore" },
-            redirect_url: "https://www.google.com/about/careers/applications/jobs/results/",
-            salary_min: 1500000,
-            salary_max: 2500000
-          },
-          {
-            id: 2,
-            title: "Data Analyst",
-            company: { display_name: "Amazon" },
-            location: { display_name: "Hyderabad" },
-            redirect_url: "https://amazon.jobs",
-            salary_min: 1200000,
-            salary_max: 1800000
-          }
-        ];
-      }
-      
       setJobs(results);
     } catch (err) {
       console.error("Error fetching jobs:", err);
-      setJobs([
-        {
-          id: 1,
-          title: "Software Engineer",
-          company: { display_name: "Google" },
-          location: { display_name: "Bangalore" },
-          redirect_url: "https://www.google.com/about/careers/applications/jobs/results/",
-          salary_min: 1500000,
-          salary_max: 2500000
-        }
-      ]);
+      // Fallback
+      setJobs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const [matching, setMatching] = useState(false);
-  const [matchResults, setMatchResults] = useState<any[]>([]);
-
-  const handleApply = async (job: any) => {
-    try {
-      await api.post('/job-tracker/apply', {
-        company: job.company.display_name,
-        role: job.title
-      });
-      console.log("Application tracked");
-    } catch (err) {
-      console.error("Tracking failed:", err);
-    }
+  const handleApply = (job: any) => {
     window.open(job.redirect_url, '_blank', 'noopener,noreferrer');
-  };
-
-  const checkMatch = async () => {
-    const resumeText = localStorage.getItem('generatedResume') || "Experienced software developer with skills in React, Node.js, and Python.";
-    
-    setMatching(true);
-    try {
-      const res = await api.post('/ai/job-match', {
-        resumeText,
-        jobs: filteredJobs.slice(0, 10)
-      });
-      setMatchResults(res.data);
-    } catch (err) {
-      console.error("Match failed:", err);
-    } finally {
-      setMatching(false);
-    }
   };
 
   useEffect(() => {
@@ -131,15 +68,6 @@ export default function PlacementsPage() {
             <p className="text-indigo-100 max-w-2xl mx-auto text-lg mb-8">
                 Explore 100+ verified roles from global tech giants and innovative startups.
             </p>
-            
-            <button 
-              onClick={checkMatch}
-              disabled={matching}
-              className="bg-white text-indigo-600 px-8 py-3 rounded-full font-bold shadow-xl hover:scale-105 transition disabled:opacity-50 flex items-center gap-2 mx-auto"
-            >
-              {matching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-              {matching ? "Analyzing Match..." : "AI Resume Match Check"}
-            </button>
         </div>
       </div>
 
@@ -169,16 +97,8 @@ export default function PlacementsPage() {
         {/* Dense Grid Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredJobs.map((job: any, index) => {
-              const match = matchResults.find(m => m.company === job.company.display_name && m.role === job.title);
-              
               return (
                 <div key={job.id || index} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col h-full group p-5 min-h-[300px] relative">
-                    
-                    {match && (
-                      <div className="absolute top-4 right-4 bg-orange-100 text-orange-600 px-2 py-1 rounded-lg text-[10px] font-bold animate-pulse">
-                        🔥 {match.matchScore}% Match
-                      </div>
-                    )}
 
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500">
@@ -207,16 +127,6 @@ export default function PlacementsPage() {
                         )}
                     </div>
 
-                    {match && match.missingSkills?.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-widest">Missing Skills</p>
-                        <div className="flex flex-wrap gap-1">
-                          {match.missingSkills.slice(0, 3).map((s: string) => (
-                            <span key={s} className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[9px] font-medium">{s}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                     <div className="mt-auto pt-4 border-t border-gray-50 flex flex-col gap-3">
                         <details className="group/details">

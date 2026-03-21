@@ -122,54 +122,21 @@ export default function MockInterview() {
 
   if (evaluation) {
     return (
-      <div className="premium-card p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl animate-in zoom-in duration-500">
+      <div className="premium-card p-8 rounded-2xl bg-white border border-gray-100 shadow-xl animate-in zoom-in duration-500">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 text-blue-600 mb-4 border border-blue-200">
             <span className="text-3xl font-bold">{evaluation.score}</span>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Interview Performance</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="space-y-4 p-5 rounded-xl bg-emerald-50 border border-emerald-100">
-            <h3 className="text-emerald-700 font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5" /> Strengths
-            </h3>
-            <ul className="space-y-1">
-              {evaluation.strengths?.map((s: string, i: number) => (
-                <li key={i} className="text-xs text-gray-600 flex items-start gap-2">
-                  <span className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="space-y-4 p-5 rounded-xl bg-red-50 border border-red-100">
-            <h3 className="text-red-700 font-bold flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" /> Growth Areas
-            </h3>
-            <ul className="space-y-1">
-              {evaluation.weaknesses?.map((w: string, i: number) => (
-                <li key={i} className="text-xs text-gray-600 flex items-start gap-2">
-                  <span className="w-1 h-1 rounded-full bg-red-400 mt-1.5 flex-shrink-0" />
-                  {w}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Performance Feedback</h2>
         </div>
 
         <div className="p-6 rounded-2xl bg-indigo-50 border border-indigo-100 mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-indigo-900 font-bold">Expert Feedback</h3>
-            <span className="bg-indigo-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">{evaluation.status}</span>
-          </div>
-          <p className="text-sm text-indigo-800 leading-relaxed italic">{evaluation.overall_feedback}</p>
+          <p className="text-sm text-indigo-800 leading-relaxed italic">{evaluation.feedback || evaluation.overall_feedback}</p>
         </div>
 
         <button
           onClick={() => { setEvaluation(null); setQuestions([]); setIsInterviewActive(false); }}
-          className="w-full py-3 rounded-xl bg-white/10 text-white font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
         >
           <RefreshCw className="w-4 h-4" />
           Start New Interview

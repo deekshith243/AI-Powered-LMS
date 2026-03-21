@@ -8,9 +8,7 @@ import Link from 'next/link';
 import { BookOpen, AlertCircle, Sparkles, Download, BarChart2, Award, Zap, Eye, BrainCircuit, ChevronRight, Briefcase, FileText, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
-import dynamic from 'next/dynamic';
-
-const AIInsightsComp = dynamic(() => Promise.resolve(AIInsights), { ssr: false });
+const AIInsightsComp = () => null;
 
 interface UserProfile {
   name: string;
@@ -31,113 +29,7 @@ interface EnrolledSubject {
   percent_complete: number;
 }
 
-function AIInsights() {
-  const [insights, setInsights] = useState<any>(null);
-  const [recs, setRecs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [insightsRes, recsRes] = await Promise.all([
-          api.post('/ai/dashboard-insights'),
-          api.get('/ai/recommendations/me')
-        ]);
-        setInsights(insightsRes.data);
-        setRecs(recsRes.data.recommendations || []);
-      } catch (err) {
-        console.error("Failed to fetch AI data", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  if (loading) return (
-    <div className="mb-12 p-8 rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 animate-pulse">
-      <div className="h-6 w-48 bg-indigo-200 rounded mb-4"></div>
-      <div className="space-y-3">
-        <div className="h-4 w-full bg-white rounded"></div>
-        <div className="h-4 w-2/3 bg-white rounded"></div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="mb-12 animate-fade-in">
-      {insights && (
-        <>
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            <Sparkles className="w-6 h-6 mr-3 text-amber-500" />
-            AI Career Insights
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-emerald-100">
-              <h4 className="text-emerald-700 font-bold mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> Your Strengths
-              </h4>
-              <ul className="space-y-2">
-                {insights.strengths?.map((s: string, i: number) => (
-                  <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
-              <h4 className="text-amber-700 font-bold mb-3 flex items-center gap-2">
-                <BrainCircuit className="w-4 h-4" /> Growth Areas
-              </h4>
-              <ul className="space-y-2">
-                {insights.weaknesses?.map((w: string, i: number) => (
-                  <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                    {w}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </>
-      )}
-
-      {recs.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-indigo-600" /> Recommended For You
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {recs.map((rec, i) => (
-              <div key={i} className="bg-white p-4 rounded-xl border border-indigo-50 shadow-sm hover:border-indigo-200 transition">
-                <h5 className="font-bold text-gray-900 text-sm mb-1">{rec.title}</h5>
-                <p className="text-[10px] text-gray-500 line-clamp-2">{rec.reason}</p>
-                <Link href="/catalog" className="text-indigo-600 text-[10px] font-bold mt-2 inline-block hover:underline">Explore Course →</Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {insights?.next_steps && (
-        <div className="p-6 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl text-white shadow-lg border border-indigo-500/20 relative overflow-hidden">
-          <div className="relative z-10">
-            <h4 className="font-bold mb-2 flex items-center gap-2">
-              <ChevronRight className="w-4 h-4" /> Strategic Next Step
-            </h4>
-            <p className="text-indigo-100 text-sm leading-relaxed">
-              {insights.next_steps?.[0]}
-            </p>
-          </div>
-          <Sparkles className="absolute -bottom-4 -right-4 w-24 h-24 text-white/10 rotate-12" />
-        </div>
-      )}
-    </div>
-  );
-}
 
 import { CheckCircle2 } from 'lucide-react';
 
@@ -146,24 +38,46 @@ export default function Profile() {
   const { user: authUser } = useAuthStore();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [subjects, setSubjects] = useState<EnrolledSubject[]>([]);
-  const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloadingCert, setDownloadingCert] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchProfileData = async () => {
-      console.log("Dashboard loaded");
+      const API_URL = "https://lms-backend-prod-3935.onrender.com";
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        console.error("No token found, redirecting to login");
+        window.location.href = "/login";
+        return;
+      }
+
+      setLoading(true);
+      setError('');
+
       try {
-        const [profileRes, appliedRes] = await Promise.all([
-          api.get('/users/profile'),
-          api.get('/job-tracker/applied')
-        ]);
-        setUser(profileRes.data.user);
-        setSubjects(profileRes.data.enrolled_subjects);
-        setAppliedJobs(appliedRes.data || []);
+        const res = await fetch(`${API_URL}/api/auth/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to load profile");
+        }
+
+        const data = await res.json();
+        setUser(data);
+        
+        // Also fetch enrolled subjects via axios api as it has interceptors
+        const subjectsRes = await api.get('/users/profile');
+        setSubjects(subjectsRes.data.enrolled_subjects || []);
+
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to load dashboard');
+        console.error("Dashboard Error:", err);
+        setError(err.message || 'Failed to load profile');
       } finally {
         setLoading(false);
       }
@@ -328,35 +242,6 @@ export default function Profile() {
          </div>
       </div>
 
-      {/* 🔮 AI Insights Section */}
-      <AIInsights />
-
-      {/* 🚀 Applied Jobs Tracker (Feature 2) */}
-      <div className="mb-12">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-          <Briefcase className="w-6 h-6 mr-3 text-orange-600" />
-          Applied Jobs Tracker
-        </h3>
-        {appliedJobs.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-gray-200">
-            <p className="text-gray-400 font-medium">No jobs applied yet. Head to Placements to start your career!</p>
-            <Link href="/placements" className="text-indigo-600 font-bold text-sm mt-3 inline-block hover:underline">Browse Jobs →</Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {appliedJobs.map((job, idx) => (
-              <div key={idx} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-bold text-gray-900">{job.company}</h4>
-                  <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase">{job.status}</span>
-                </div>
-                <p className="text-sm text-gray-500 font-medium">{job.role}</p>
-                <p className="text-[10px] text-gray-400 mt-auto pt-3">{new Date(job.date).toLocaleDateString()}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
 
 

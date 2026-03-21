@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: 'A Next.js 14 Learning Management System powered by Hugging Face AI.',
 };
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 export default function RootLayout({
   children,
 }: {
@@ -18,8 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gray-50 text-gray-900 flex flex-col min-h-screen`}>
-        <Navbar />
-        <main className="flex-grow flex flex-col">{children}</main>
+        <ErrorBoundary>
+          <Navbar />
+          <main className="flex-grow flex flex-col">{children}</main>
+        </ErrorBoundary>
       </body>
     </html>
   );

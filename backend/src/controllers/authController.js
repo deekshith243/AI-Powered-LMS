@@ -136,3 +136,23 @@ exports.refresh = async (req, res) => {
     res.status(401).json({ message: 'Invalid refresh token' });
   }
 };
+
+exports.getProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const [users] = await pool.query('SELECT name, email, points, streak FROM users WHERE id = ?', [userId]);
+    
+    if (users.length === 0) return res.status(404).json({ message: 'User not found' });
+
+    const user = users[0];
+    res.json({
+      name: user.name || "User",
+      email: user.email || "",
+      points: user.points || 0,
+      streak: user.streak || 0
+    });
+  } catch (error) {
+    console.error("Profile Error:", error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

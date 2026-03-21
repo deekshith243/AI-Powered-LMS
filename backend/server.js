@@ -12,51 +12,18 @@ const certificateRoutes = require('./src/routes/certificateRoutes');
 const noteRoutes = require('./src/routes/noteRoutes');
 const enrollmentRoutes = require('./src/routes/enrollmentRoutes');
 const jobsRoutes = require('./src/routes/jobs');
-const jobTrackerRoutes = require('./src/routes/jobRoutes');
 
 const app = express();
-
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://ai-powered-lms-app.vercel.app',
-  process.env.FRONTEND_URL
-].filter(Boolean);
+require('dotenv').config();
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: "*",
   credentials: true
 }));
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
-});
-
-app.get('/api/db-test', async (req, res) => {
-  try {
-    const pool = require('./src/config/db');
-    const [rows] = await pool.query('SELECT 1 as connected');
-    res.json({ status: 'connected', result: rows[0] });
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
-  }
-});
-
-app.get('/api/db-inspect', async (req, res) => {
-  try {
-    const pool = require('./src/config/db');
-    const [rows] = await pool.query('DESCRIBE subjects');
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
-  }
 });
 
 app.use('/api/auth', authRoutes);
@@ -69,18 +36,13 @@ app.use('/api/certificates', certificateRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/courses/enroll', enrollmentRoutes);
 app.use('/api/jobs', jobsRoutes);
-app.use('/api/job-tracker', jobTrackerRoutes);
-
-// Route Aliases for deployment stability
-app.use('/api/jobs/apply', jobTrackerRoutes);
-app.use('/api/jobs/applied', jobTrackerRoutes);
 
 app.use((err, req, res, next) => {
-  console.error("GLOBAL ERROR:", err.message);
-  res.status(500).json({ error: 'Internal server error', message: err.message });
+  console.error("SERVER ERROR:", err);
+  res.status(500).json({ message: 'Server error', error: err.message });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

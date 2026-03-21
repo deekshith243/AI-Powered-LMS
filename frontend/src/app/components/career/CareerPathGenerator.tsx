@@ -68,69 +68,35 @@ export default function CareerPathGenerator() {
       )}
 
       {roadmap && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="flex flex-wrap gap-4">
-            <div className="bg-emerald-50 text-emerald-700 font-bold px-4 py-2 rounded-xl border border-emerald-100 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" /> Total Timeline: {roadmap.total_timeline}
-            </div>
+        <div className="p-8 rounded-3xl bg-white border border-gray-100 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <Map className="w-5 h-5 text-indigo-600" /> Your Personalized Roadmap
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+             <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mb-1">Target Timeline</p>
+                <p className="text-indigo-900 font-bold">{roadmap?.timeline || "3-6 Months"}</p>
+             </div>
+             <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-1">Key Skills</p>
+                <p className="text-emerald-900 font-bold">{roadmap?.skills?.slice(0, 3).join(", ") || "Technical Skills"}</p>
+             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Map className="w-5 h-5 text-indigo-600" /> Step-by-Step Roadmap
-              </h3>
-              <div className="space-y-4 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-0.5 before:bg-indigo-100">
-                {roadmap.roadmap?.map((step: any, idx: number) => (
-                  <div key={idx} className="relative pl-10 group">
-                    <div className="absolute left-0 top-1 w-8 h-8 bg-white border-2 border-indigo-600 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600 z-10 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                      {idx + 1}
-                    </div>
-                    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                      <div className="flex justify-between items-start mb-2 text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
-                        {step.timeline}
-                      </div>
-                      <h4 className="font-bold text-gray-900 mb-2">{step.step}</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {step.topics?.map((t: string) => (
-                          <span key={t} className="bg-gray-50 text-gray-500 px-2 py-0.5 rounded text-[10px] font-medium border border-gray-100">{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-8">
-              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm h-fit">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-amber-500" /> Expert Recommendations
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Required Skills</p>
-                    <div className="flex flex-wrap gap-2">
-                      {roadmap.required_skills?.map((s: string) => (
-                        <span key={s} className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg text-xs font-bold">{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Recommended LMS Courses</p>
-                    <div className="space-y-2">
-                      {roadmap.recommended_courses?.map((c: string) => (
-                        <div key={c} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group">
-                          <span className="text-sm font-bold text-gray-700">{c}</span>
-                          <Link href="/catalog" className="text-indigo-600 font-bold text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">ENROLL →</Link>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+          <div className="space-y-4 mb-8">
+             {roadmap?.steps?.map((step: string, idx: number) => (
+                <div key={idx} className="flex items-start gap-4 p-4 rounded-2xl border border-gray-50 hover:border-indigo-100 transition-colors bg-white shadow-sm">
+                   <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0">{idx + 1}</div>
+                   <p className="text-gray-700 font-medium pt-1 text-sm">{step}</p>
                 </div>
-              </div>
-            </div>
+             ))}
+          </div>
+
+          <div className="prose prose-indigo max-w-none">
+            <pre className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed text-sm bg-gray-50 p-6 rounded-2xl border border-gray-100">
+              {typeof roadmap?.roadmap === 'string' ? roadmap.roadmap : "Check the steps above for your roadmap."}
+            </pre>
           </div>
         </div>
       )}
