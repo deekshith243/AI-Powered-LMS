@@ -13,6 +13,12 @@ import AICareerPreview from './components/home/AICareerPreview';
 export default function Home() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCareerSuite, setShowCareerSuite] = useState(false);
+
+  const categories = [
+    "All", "Python", "Artificial Intelligence", "Machine Learning", 
+    "Java", "Web Development", "Data Science"
+  ];
 
   useEffect(() => {
     api.get('/subjects').then(res => {
@@ -68,14 +74,36 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 space-y-32">
-        {/* 🚀 AI Career Preview */}
-        <div id="career-preview" className="scroll-mt-20">
-          <AICareerPreview />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 space-y-20">
+        {/* Categories Section */}
+        <div className="flex flex-wrap justify-center gap-3">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              className="px-6 py-2 rounded-full border border-gray-100 bg-gray-50 text-gray-600 font-bold text-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all"
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
-        {/* AI Recommendations */}
-        <AIRecommended />
+        {/* Toggle Button for AI Career Suite */}
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowCareerSuite(!showCareerSuite)}
+            className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold shadow-xl shadow-indigo-200 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+          >
+            <Sparkles className={`w-5 h-5 ${showCareerSuite ? 'animate-spin' : ''}`} />
+            {showCareerSuite ? "Hide AI Career Suite" : "Explore AI Career Suite"}
+          </button>
+        </div>
+
+        {/* 🚀 Expandable AI Career Suite */}
+        {showCareerSuite && (
+          <section className="animate-in fade-in slide-in-from-top-4 duration-500">
+            <AICareerPreview />
+          </section>
+        )}
 
         {/* Popular Courses */}
         <section id="catalog" className="scroll-mt-20">

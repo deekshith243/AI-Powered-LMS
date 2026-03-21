@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { FileText, ShieldCheck, BrainCircuit, Briefcase } from 'lucide-react';
 import ResumeGenerator from './ResumeGenerator';
 import ATSAnalyzer from './ATSAnalyzer';
@@ -9,7 +10,15 @@ import CareerPathGenerator from './CareerPathGenerator';
 import ResumeImprover from './ResumeImprover';
 
 export default function CareerSuite() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'resume' | 'ats' | 'improve' | 'interview' | 'path'>('resume');
+
+  React.useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['resume', 'ats', 'improve', 'interview', 'path'].includes(tab)) {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
 
   const tabs = [
     { id: 'resume', name: 'Resume', icon: FileText, color: 'text-blue-600' },
