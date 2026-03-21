@@ -75,18 +75,7 @@ export default function Navbar() {
             <Link href="/" className="flex-shrink-0 flex items-center text-xl font-bold tracking-tight text-indigo-700">
               AI-Powered LMS
             </Link>
-            {isAuthenticated && (
-              <div className="hidden sm:ml-8 sm:flex sm:space-x-8">
-                <Link 
-                  href="/catalog" 
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
-                    pathname.includes('/subjects') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  Explore Catalog
-                </Link>
-              </div>
-            )}
+            {/* Removed Explore Catalog from here */}
           </div>
           
           {/* Desktop Right Nav & Search */}
@@ -129,6 +118,18 @@ export default function Navbar() {
                   </div>
                )}
             </div>
+
+            {isAuthenticated && (
+              <Link href="/catalog">
+                <button
+                  className={`mr-2 px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition shadow-md shadow-indigo-100 ${
+                    pathname === '/catalog' ? 'ring-2 ring-indigo-300 ring-offset-2' : ''
+                  }`}
+                >
+                  Explore Catalog
+                </button>
+              </Link>
+            )}
 
             <button
               onClick={() => router.push("/placements")}
