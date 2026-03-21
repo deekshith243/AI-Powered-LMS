@@ -4,21 +4,15 @@ import React, { useState } from 'react';
 import { ShieldCheck, Upload, Loader2, CheckCircle2, AlertCircle, TrendingUp } from 'lucide-react';
 import { extractTextFromPDF } from '@/lib/pdfParser';
 
-const API_URL = "https://lms-backend-prod-3935.onrender.com";
-
-interface ATSStats {
-  score: number;
-  matched_skills: string[];
-  missing_skills: string[];
-  suggestions: string[];
-  required_skills: string[];
-}
-
 export default function ATSAnalyzer() {
   const [targetRole, setTargetRole] = useState('');
   const [resumeText, setResumeText] = useState('');
-  const [extractedText, setExtractedText] = useState('');
-  const [stats, setStats] = useState<ATSStats | null>(null);
+  const [result, setResult] = useState<{
+    score: number;
+    matched: string[];
+    missing: string[];
+    suggestions: string[];
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -29,17 +23,12 @@ export default function ATSAnalyzer() {
 
     setUploading(true);
     setInfo('');
-    console.log("Uploading file:", file.name);
     
     try {
       const text = await extractTextFromPDF(file);
-      
-      if (!text || text.length < 20) {
-        throw new Error("Invalid or empty PDF");
-      }
+      if (!text || text.length < 20) throw new Error("Invalid or empty PDF");
 
       setResumeText(text);
-      setExtractedText(text);
       setInfo("✅ Resume uploaded successfully");
     } catch (err: any) {
       console.error("PDF process handled:", err);
@@ -52,48 +41,42 @@ export default function ATSAnalyzer() {
 
   const handleAnalyze = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const finalText = resumeText;
-    if (!targetRole || !finalText) return setInfo('ℹ️ Please enter target role and provide resume (paste or PDF).');
+    if (!targetRole || !resumeText) {
+        setInfo('ℹ️ Please enter target role and provide resume (paste or PDF).');
+        return;
+    }
     
     setLoading(true);
     setInfo('');
     
     try {
-      const res = await fetch(`${API_URL}/api/ai/ats`, {
+      const res = await fetch("/api/ai/ats", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          resumeText: finalText,
+          resumeText,
           targetRole
         })
       });
 
-      const data = await res.json();
-      if (!data) throw new Error("Invalid response");
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-      setStats({
+      const data = await res.json();
+
+      setResult({
         score: data.score ?? 0,
-        matched_skills: data.matched_skills ?? [],
-        missing_skills: data.missing_skills ?? [],
-        suggestions: data.suggestions ?? [],
-        required_skills: data.required_skills ?? []
+        matched: data.matched_skills ?? [],
+        missing: data.missing_skills ?? [],
+        suggestions: data.suggestions ?? []
       });
 
       setInfo("✅ AI ATS Analysis completed");
 
     } catch (err) {
-      console.error("ATS ERROR:", err);
-      setInfo("⚠️ Using fallback analysis");
-
-      setStats({
-        score: 50,
-        matched_skills: ["Python", "JavaScript", "Problem Solving"],
-        missing_skills: ["Advanced System Design"],
-        suggestions: ["AI service temporarily limited. Try again later for more details."],
-        required_skills: []
-      });
+      console.error("ATS FRONTEND ERROR:", err);
+      alert("Failed to analyze resume. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -114,7 +97,7 @@ export default function ATSAnalyzer() {
             <label className="text-sm font-medium text-gray-400">Target Job Role</label>
             <input
               type="text"
-              placeholder="e.g. Senior Backend Engineer"
+              placeholder="e.g. Data Analyst"
               value={targetRole}
               onChange={(e) => setTargetRole(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all font-medium"
@@ -131,7 +114,6 @@ export default function ATSAnalyzer() {
               </label>
             </label>
             
-
             <textarea
               placeholder="Paste your resume text here..."
               value={resumeText}
@@ -143,15 +125,6 @@ export default function ATSAnalyzer() {
                 <div className="flex items-center gap-2 text-purple-400 text-sm py-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Extracting PDF...
-                </div>
-            )}
-
-            {extractedText && !uploading && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                    <div className="text-emerald-400 text-xs font-bold mb-1 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" />
-                        PDF uploaded successfully
-                    </div>
                 </div>
             )}
           </div>
@@ -183,7 +156,7 @@ export default function ATSAnalyzer() {
         </button>
       </div>
 
-      {stats && (
+      {result && (
         <div className="premium-card p-6 rounded-2xl bg-gray-50 border border-gray-100 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -192,7 +165,7 @@ export default function ATSAnalyzer() {
             </h3>
             <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-xl border border-purple-100 shadow-sm">
               <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Score</span>
-              <span className="text-3xl font-extrabold text-purple-600">{stats.score}</span>
+              <span className="text-3xl font-extrabold text-purple-600">{result.score || 0}</span>
             </div>
           </div>
 
@@ -202,14 +175,12 @@ export default function ATSAnalyzer() {
                 <CheckCircle2 className="w-4 h-4" />
                 Matched Skills ✅
               </h4>
-              <div className="flex flex-wrap gap-2">
-                {stats.matched_skills.map((skill: string, i: number) => (
-                  <span key={i} className="px-3 py-1 bg-white text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold shadow-sm">
-                    {skill}
-                  </span>
+              <ul className="list-disc list-inside space-y-1">
+                {result.matched?.map((skill, i) => (
+                  <li key={i} className="text-xs text-emerald-800 font-medium">{skill}</li>
                 ))}
-                {stats.matched_skills.length === 0 && <span className="text-xs text-gray-400 italic">No specific matches found.</span>}
-              </div>
+                {result.matched?.length === 0 && <span className="text-xs text-gray-400 italic">No specific matches found.</span>}
+              </ul>
             </div>
 
             <div className="space-y-4 p-5 rounded-xl bg-rose-50 border border-rose-100">
@@ -217,14 +188,12 @@ export default function ATSAnalyzer() {
                 <AlertCircle className="w-4 h-4" />
                 Missing Critical Skills ❌
               </h4>
-              <div className="flex flex-wrap gap-2">
-                {stats.missing_skills.map((skill: string, i: number) => (
-                  <span key={i} className="px-3 py-1 bg-white text-rose-700 border border-rose-200 rounded-full text-xs font-bold shadow-sm">
-                    {skill}
-                  </span>
+              <ul className="list-disc list-inside space-y-1">
+                {result.missing?.map((skill, i) => (
+                  <li key={i} className="text-xs text-rose-800 font-medium">{skill}</li>
                 ))}
-                {stats.missing_skills.length === 0 && <span className="text-xs text-gray-400 italic">Excellent! No major missing skills detected.</span>}
-              </div>
+                {result.missing?.length === 0 && <span className="text-xs text-gray-400 italic">Excellent! No major missing skills detected.</span>}
+              </ul>
             </div>
 
             <div className="md:col-span-2 space-y-4 p-5 rounded-xl bg-purple-50 border border-purple-100">
@@ -233,7 +202,7 @@ export default function ATSAnalyzer() {
                     AI Improvement Strategy 💡
                 </h4>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {stats.suggestions.map((s: string, i: number) => (
+                    {result.suggestions?.map((s, i) => (
                         <li key={i} className="text-sm text-gray-700 flex items-start gap-3 bg-white/50 p-3 rounded-lg border border-purple-100/50">
                             <div className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">
                                 {i + 1}
