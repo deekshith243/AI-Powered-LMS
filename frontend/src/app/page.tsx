@@ -11,6 +11,7 @@ import { useAuthStore } from '../store/authStore';
 import { useAuth } from '../hooks/useAuth';
 
 import AICareerPreview from './components/home/AICareerPreview';
+import CourseCard from './components/home/CourseCard';
 
 export default function Home() {
   const { loading: authLoading, isAuth } = useAuth();
@@ -127,38 +128,7 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {subjects.map((subject) => (
-                <Link href={`/learn/${subject.id}`} key={subject.id} className="group">
-                  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2 overflow-hidden flex flex-col h-full">
-                    <div className="aspect-video bg-gray-50 relative overflow-hidden">
-                      {subject.thumbnail_url ? (
-                        <img src={subject.thumbnail_url} alt={subject.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          <BookOpen className="w-12 h-12" />
-                        </div>
-                      )}
-                      {subject.is_free && (
-                        <div className="absolute top-4 left-4 px-3 py-1 bg-emerald-500 text-white text-[10px] font-bold uppercase rounded-lg shadow-lg">Free</div>
-                      )}
-                    </div>
-                    
-                    <div className="p-6 flex flex-col flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{subject.title}</h3>
-                      <p className="text-gray-500 text-sm line-clamp-2 mb-6 font-medium leading-relaxed">{subject.description}</p>
-                      
-                      <div className="mt-auto flex items-center justify-between pt-6 border-t border-gray-50">
-                        <span className="text-xs font-bold text-gray-400 flex items-center gap-1 uppercase tracking-widest">
-                          <BookOpen className="w-3 h-3" />
-                          Self-Paced
-                        </span>
-                        <span className="text-indigo-600 font-extrabold flex items-center gap-1 text-sm">
-                          Start Now
-                          <ChevronRight className="w-4 h-4" />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                <CourseCard key={subject.id} subject={subject} />
               ))}
             </div>
           )}

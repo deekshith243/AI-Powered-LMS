@@ -5,6 +5,7 @@ import api from '../../lib/api';
 import Link from 'next/link';
 import { Skeleton } from '../components/ui/Skeleton';
 import { AlertCircle, BookX, Search } from 'lucide-react';
+import CourseCard from '../components/home/CourseCard';
 
 interface Subject {
   id: number;
@@ -220,75 +221,4 @@ export default function Subjects() {
   );
 }
 
-// 2. IMPROVED COURSE CARDS
-function CourseCard({ subject, onEnroll, enrollingId }: { subject: Subject, onEnroll: (id: number) => void, enrollingId: number | null }) {
-  const isEnrolling = enrollingId === subject.id;
 
-  return (
-    <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 flex flex-col h-[400px] overflow-hidden group relative">
-      
-      {/* Badges */}
-      <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-2">
-        {subject.is_enrolled ? (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-600 text-white shadow-md">
-            Enrolled
-          </span>
-        ) : subject.is_free ? (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-green-500 text-white shadow-md">
-            Free
-          </span>
-        ) : (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-600 text-white shadow-md">
-            ₹{subject.price}
-          </span>
-        )}
-      </div>
-
-      {/* Thumbnail */}
-      <div className="h-48 w-full bg-gray-200 overflow-hidden relative">
-        {subject.thumbnail_url ? (
-          <img 
-            src={subject.thumbnail_url} 
-            alt={subject.title} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-100">
-            <BookX className="w-10 h-10 mb-2 opacity-50" />
-            <span className="text-sm font-medium">No Thumbnail</span>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      </div>
-
-      {/* Content */}
-      <div className="p-5 flex flex-col flex-1">
-        <h3 className="text-lg font-bold text-gray-900 leading-tight mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
-          {subject.title}
-        </h3>
-        <p className="text-sm text-gray-500 line-clamp-2 flex-grow mb-4">
-          {subject.description}
-        </p>
-        
-        <div className="flex gap-2">
-          {!subject.is_enrolled && !subject.is_free ? (
-            <button
-              onClick={() => onEnroll(subject.id)}
-              disabled={isEnrolling}
-              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 transition-colors shadow-sm disabled:opacity-50"
-            >
-              {isEnrolling ? 'Processing...' : 'Buy Course'}
-            </button>
-          ) : null}
-          
-          <Link
-            href={`/learn/${subject.id}`}
-            className={`${(!subject.is_enrolled && !subject.is_free) ? 'flex-1' : 'w-full'} block text-center px-4 py-2.5 rounded-lg text-sm font-bold text-white ${subject.is_enrolled ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-800 hover:bg-gray-900'} transition-colors shadow-sm`}
-          >
-            {subject.is_enrolled ? 'Go to Course' : 'View Course'}
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
