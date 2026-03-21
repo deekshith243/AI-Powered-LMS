@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { ShieldCheck, Upload, Loader2, CheckCircle2, AlertCircle, TrendingUp, Search } from 'lucide-react';
-import api from '../../../lib/api';
+
+const API_URL = "https://lms-backend-prod-3935.onrender.com";
 
 interface ATSStats {
   score: number;
@@ -48,14 +49,11 @@ export default function ATSAnalyzer() {
     setUploading(true);
     setError('');
     try {
-      if (file.type === 'application/pdf') {
-        const text = await extractTextfromPDF(file);
-        setResumeText(text);
-      } else {
-        setError('Only PDF files are supported for auto-extraction currently.');
-      }
+      const text = await file.text();
+      setResumeText(text);
+      console.log("File uploaded and text extracted");
     } catch (err: any) {
-      setError(err.message || 'Failed to extract text from PDF.');
+      setError(err.message || 'Failed to extract text from file.');
     } finally {
       setUploading(false);
     }
@@ -68,17 +66,34 @@ export default function ATSAnalyzer() {
     setError('');
     
     console.log("--- ATS Analysis ---");
-    console.log("Target Role:", targetRole);
-    console.log("Resume Text Length:", resumeText.length);
-    console.log("Endpoint: /api/ai/ats");
+    console.log("Sending role:", targetRole);
+    console.log(`Endpoint: ${API_URL}/api/ai/ats`);
 
     try {
-      const res = await api.post('/ai/ats', { resumeText, targetRole });
-      console.log("ATS Response:", res.data);
-      setStats(res.data);
+      const res = await fetch(`${API_URL}/api/ai/ats`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({
+          resumeText,
+          targetRole
+        })
+      });
+
+      if (!res.ok) {
+        console.error("API error");
+        alert("Something went wrong");
+        throw new Error("API error");
+      }
+
+      const data = await res.json();
+      console.log("ATS Response:", data);
+      setStats(data);
     } catch (err: any) {
       console.error("ATS Error:", err);
-      setError(err.response?.data?.message || 'Analysis failed. Please try again.');
+      setError(err.message || 'Analysis failed. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Mic, Send, Loader2, CheckCircle2, AlertCircle, Timer, User, BrainCircuit, RefreshCw } from 'lucide-react';
-import api from '../../../lib/api';
+
+const API_URL = "https://lms-backend-prod-3935.onrender.com";
 
 interface Evaluation {
   score: number;
@@ -42,28 +43,43 @@ export default function MockInterview() {
     if (e) e.preventDefault();
     if (!role) {
       alert("Please enter a target role");
-      return setError('Please enter a role for the interview.');
+      return;
     }
     
     setLoading(true);
     setError('');
     
     console.log("--- Starting Mock Interview ---");
-    console.log("Target Role:", role);
-    console.log("Endpoint: /api/ai/interview/start");
+    console.log("Sending role:", role);
+    console.log(`Endpoint: ${API_URL}/api/ai/interview/start`);
 
     try {
-      const res = await api.post('/ai/interview/start', { role });
-      console.log("Interview Questions received:", res.data.questions);
-      setQuestions(res.data.questions);
-      setAnswers(new Array(res.data.questions.length).fill(''));
+      const res = await fetch(`${API_URL}/api/ai/interview/start`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({ role })
+      });
+
+      if (!res.ok) {
+        console.error("API error");
+        alert("Something went wrong");
+        throw new Error("API error");
+      }
+
+      const data = await res.json();
+      console.log("Questions:", data.questions);
+      setQuestions(data.questions);
+      setAnswers(new Array(data.questions.length).fill(''));
       setIsInterviewActive(true);
       setCurrentStep(0);
       setTimeLeft(300);
       setEvaluation(null);
     } catch (err: any) {
       console.error("Interview Start Error:", err);
-      setError(err.response?.data?.message || 'Failed to start interview. Try again.');
+      setError(err.message || 'Failed to start interview. Try again.');
     } finally {
       setLoading(false);
     }
@@ -87,21 +103,36 @@ export default function MockInterview() {
     setIsInterviewActive(false);
     
     console.log("--- Evaluating Interview ---");
-    console.log("Role:", role);
+    console.log("Sending role:", role);
     console.log("Answers:", answers);
-    console.log("Endpoint: /api/ai/interview/evaluate");
+    console.log(`Endpoint: ${API_URL}/api/ai/interview/evaluate`);
 
     try {
-      const res = await api.post('/ai/interview/evaluate', { 
-        role, 
-        questions, 
-        userAnswers: answers 
+      const res = await fetch(`${API_URL}/api/ai/interview/evaluate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({ 
+          role, 
+          questions, 
+          userAnswers: answers 
+        })
       });
-      console.log("Evaluation Result:", res.data);
-      setEvaluation(res.data);
+
+      if (!res.ok) {
+        console.error("API error");
+        alert("Something went wrong");
+        throw new Error("API error");
+      }
+
+      const data = await res.json();
+      console.log("Evaluation Result:", data);
+      setEvaluation(data);
     } catch (err: any) {
       console.error("Evaluation Error:", err);
-      setError(err.response?.data?.message || 'Evaluation failed.');
+      setError(err.message || 'Evaluation failed.');
     } finally {
       setEvaluating(false);
     }

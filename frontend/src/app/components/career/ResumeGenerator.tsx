@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { FileText, Download, Wand2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
-import api from '../../../lib/api';
 import jsPDF from 'jspdf';
+
+const API_URL = "https://lms-backend-prod-3935.onrender.com";
 
 export default function ResumeGenerator() {
   const [role, setRole] = useState('');
@@ -20,29 +21,40 @@ export default function ResumeGenerator() {
     if (e) e.preventDefault();
     if (!role) {
       alert("Please enter a target role");
-      return setError('Please enter a target role.');
+      return;
     }
     
     setLoading(true);
     setError('');
     
     console.log("--- Generating Resume ---");
-    console.log("Target Role:", role);
+    console.log("Sending role:", role);
     console.log("User Name:", name);
     console.log("Skills:", skills);
-    console.log("Endpoint: /api/ai/resume");
+    console.log(`Endpoint: ${API_URL}/api/ai/resume`);
 
     try {
-      const res = await api.post('/ai/resume', { 
-        role, 
-        name, 
-        skills 
+      const res = await fetch(`${API_URL}/api/ai/resume`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({ role, name, skills })
       });
-      console.log("API Response received:", res.data);
-      setResume(res.data.resume);
+
+      if (!res.ok) {
+        console.error("API error");
+        alert("Something went wrong");
+        throw new Error("API error");
+      }
+
+      const data = await res.json();
+      console.log("Resume Result:", data);
+      setResume(data.resume);
     } catch (err: any) {
       console.error("API Error generating resume:", err);
-      setError(err.response?.data?.message || 'Failed to generate resume. Please try again.');
+      setError(err.message || 'Failed to generate resume. Please try again.');
     } finally {
       setLoading(false);
     }
