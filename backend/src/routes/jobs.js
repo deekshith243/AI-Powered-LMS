@@ -12,9 +12,8 @@ router.get("/", async (req, res) => {
           app_id: process.env.ADZUNA_APP_ID,
           app_key: process.env.ADZUNA_APP_KEY,
           results_per_page: 50,
-          what: "developer OR engineer OR data OR AI OR ML OR python OR cloud OR devops",
-          sort_by: "date",
-          where: "india" // Keeping it focused on India as per previous design
+          what: "developer OR engineer OR data OR AI OR ML OR cloud OR devops OR python",
+          sort_by: "date"
         },
       })
     );
