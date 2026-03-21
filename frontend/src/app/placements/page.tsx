@@ -50,7 +50,7 @@ export default function PlacementsPage() {
           title: "Software Engineer",
           company: { display_name: "Google" },
           location: { display_name: "Bangalore" },
-          redirect_url: "#",
+          redirect_url: "https://www.google.com/about/careers/applications/jobs/results/",
           salary_min: 1500000,
           salary_max: 2500000
         }
@@ -141,8 +141,7 @@ export default function PlacementsPage() {
                         rel="noopener noreferrer"
                         className="flex items-center justify-center gap-2 w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-indigo-600 transition-all duration-500 hover:scale-[1.02] active:scale-95 shadow-lg shadow-gray-200 hover:shadow-indigo-200"
                     >
-                        Apply Now
-                        <ExternalLink className="w-4 h-4" />
+                        Apply Now ↗
                     </a>
                 </div>
             </div>
