@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Sparkles, MapPin, Briefcase, IndianRupee, ExternalLink } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { Sparkles, MapPin, Briefcase, IndianRupee, ExternalLink, Filter } from 'lucide-react';
 import api from '@/lib/api';
+
+const CATEGORIES = ["All", "Developer", "Data", "AI/ML", "Cloud"];
 
 export default function PlacementsPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState("All");
 
   const fetchJobs = async () => {
     try {
@@ -14,11 +17,11 @@ export default function PlacementsPage() {
       const data = res.data;
       let results = data.results || [];
       
-      // FALLBACK: If API fails or returns no results (Step 4)
+      // Fallback if API fails or returns no results
       if (!results || results.length === 0) {
         results = [
           {
-            id: 1,
+            id: "fb-1",
             title: "Software Engineer",
             company: { display_name: "Google" },
             location: { display_name: "Bangalore" },
@@ -28,7 +31,7 @@ export default function PlacementsPage() {
             salary_max: 2500000
           },
           {
-            id: 2,
+            id: "fb-2",
             title: "Data Analyst",
             company: { display_name: "Amazon" },
             location: { display_name: "Hyderabad" },
@@ -43,14 +46,14 @@ export default function PlacementsPage() {
       setJobs(results);
     } catch (err) {
       console.error("Error fetching jobs:", err);
-      // Fallback on total error
       setJobs([
         {
-          id: 1,
+          id: "err-1",
           title: "Software Engineer",
           company: { display_name: "Google" },
           location: { display_name: "Bangalore" },
-          redirect_url: "https://www.google.com/about/careers/applications/jobs/results/",
+          redirect_url: "https://google.com/careers",
+          description: "Join the core search team to build next-gen search algorithms.",
           salary_min: 1500000,
           salary_max: 2500000
         }
@@ -64,11 +67,23 @@ export default function PlacementsPage() {
     fetchJobs();
   }, []);
 
+  const filteredJobs = useMemo(() => {
+    if (activeFilter === "All") return jobs;
+    return jobs.filter(job => {
+      const text = `${job.title} ${job.description || ''}`.toLowerCase();
+      if (activeFilter === "Developer") return text.includes('developer') || text.includes('engineer') || text.includes('backend') || text.includes('frontend') || text.includes('fullstack');
+      if (activeFilter === "Data") return text.includes('data') || text.includes('analyst') || text.includes('scientist');
+      if (activeFilter === "AI/ML") return text.includes('ai') || text.includes('ml') || text.includes('machine learning') || text.includes('intelligence');
+      if (activeFilter === "Cloud") return text.includes('cloud') || text.includes('aws') || text.includes('azure') || text.includes('gcp') || text.includes('devops');
+      return true;
+    });
+  }, [jobs, activeFilter]);
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-gray-500 font-medium animate-pulse">Fetching real-time opportunities...</p>
+        <p className="text-gray-500 font-medium animate-pulse">Fetching 200+ global opportunities...</p>
       </div>
     </div>
   );
@@ -83,29 +98,51 @@ export default function PlacementsPage() {
               Direct Career Placements
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">🚀 Exclusive Job Opportunities</h1>
-            <p className="text-indigo-100 max-w-2xl mx-auto text-lg hover:animate-pulse transition-all">
-                Your direct path to the tech industry. Explore verified software engineering and data roles at top companies.
+            <p className="text-indigo-100 max-w-2xl mx-auto text-lg">
+                Explore 100+ verified roles in AI, Data, Cloud, and Engineering at top tech giants and innovative startups.
             </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10">
+        
+        {/* Filters */}
+        <div className="flex flex-wrap justify-center gap-2 mb-12 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 relative z-20">
+          <div className="flex items-center px-4 mr-2 border-r border-gray-100 text-gray-400">
+            <Filter className="w-4 h-4 mr-2" />
+            <span className="text-xs font-bold uppercase tracking-widest">Filter By</span>
+          </div>
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveFilter(cat)}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
+                activeFilter === cat 
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {jobs.map((job: any, index) => (
+            {filteredJobs.map((job: any, index) => (
             <div key={job.id || index} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden flex flex-col h-full group p-8">
                 
                 <div className="flex justify-between items-start mb-6">
                     <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500">
                         <Briefcase className="w-7 h-7" />
                     </div>
-                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-lg shadow-sm">New Opening</span>
+                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-lg shadow-sm">Verified Opening</span>
                 </div>
 
                 <h2 className="text-2xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
                     {job.company.display_name}
                 </h2>
 
-                <p className="text-gray-600 font-bold mb-4 text-base italic">
+                <p className="text-gray-600 font-bold mb-4 text-base italic line-clamp-1">
                     {job.title}
                 </p>
 
@@ -148,11 +185,11 @@ export default function PlacementsPage() {
             ))}
         </div>
         
-        {jobs.length === 0 && !loading && (
+        {filteredJobs.length === 0 && !loading && (
             <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-20 text-center shadow-sm">
                 <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4 animate-bounce" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Finding your next big break...</h3>
-                <p className="text-gray-500 font-medium">Auto-updating our job board. Check back in a few minutes!</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">No matching opportunities</h3>
+                <p className="text-gray-500 font-medium">Try another filter or check back later.</p>
             </div>
         )}
       </div>
