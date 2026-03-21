@@ -26,6 +26,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+const authMiddleware = require('./src/middlewares/authMiddleware');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/subjects', subjectRoutes);
@@ -35,7 +37,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/courses/enroll', enrollmentRoutes);
-app.use('/api/jobs', jobsRoutes);
+app.use('/api/jobs', authMiddleware, jobsRoutes);
 
 app.use((err, req, res, next) => {
   console.error("SERVER ERROR:", err);

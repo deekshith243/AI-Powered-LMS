@@ -131,12 +131,14 @@ export default function Navbar() {
               </Link>
             )}
 
-            <button
-              onClick={() => router.push("/jobs")}
-              className="mr-2 px-4 py-1.5 text-sm font-bold text-white bg-purple-600 rounded-full hover:bg-purple-700 transition shadow-md shadow-purple-100"
-            >
-              Jobs
-            </button>
+            {isAuthenticated && (
+                <button
+                onClick={() => router.push("/jobs")}
+                className="mr-2 px-4 py-1.5 text-sm font-bold text-white bg-purple-600 rounded-full hover:bg-purple-700 transition shadow-md shadow-purple-100"
+                >
+                Jobs
+                </button>
+            )}
 
             {isAuthenticated && (
               <button
@@ -206,13 +208,15 @@ export default function Navbar() {
               >
                 My Profile
               </Link>
-              <Link 
-                href="/jobs"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-purple-500"
-              >
-                Jobs
-              </Link>
+              {isAuthenticated && (
+                  <Link 
+                    href="/jobs"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-purple-500"
+                  >
+                    Jobs
+                  </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 hover:border-red-500"
