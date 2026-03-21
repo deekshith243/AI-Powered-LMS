@@ -12,6 +12,7 @@ const certificateRoutes = require('./src/routes/certificateRoutes');
 const noteRoutes = require('./src/routes/noteRoutes');
 const enrollmentRoutes = require('./src/routes/enrollmentRoutes');
 const jobsRoutes = require('./src/routes/jobs');
+const jobTrackerRoutes = require('./src/routes/jobRoutes');
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use('/api/certificates', certificateRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/courses/enroll', enrollmentRoutes);
 app.use('/api/jobs', jobsRoutes);
+app.use('/api/job-tracker', jobTrackerRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

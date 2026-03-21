@@ -3,14 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mic, Send, Loader2, CheckCircle2, AlertCircle, Timer, User, BrainCircuit, RefreshCw } from 'lucide-react';
 
-const API_URL = "https://lms-backend-prod-3935.onrender.com";
-
-interface Evaluation {
-  score: number;
-  strengths: string;
-  weaknesses: string;
-  feedback: string;
-}
+import api from '../../../lib/api';
 
 export default function MockInterview() {
   const [role, setRole] = useState('');
@@ -20,15 +13,10 @@ export default function MockInterview() {
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [loading, setLoading] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
-  const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [evaluation, setEvaluation] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState(300);
   const [isInterviewActive, setIsInterviewActive] = useState(false);
   const [error, setError] = useState('');
- 
-  // Debug log for role
-  console.log("Interview Role:", role);
-  console.log("Interview Answer:", currentAnswer);
-
   const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => {
@@ -42,22 +30,20 @@ export default function MockInterview() {
         (window as any).startSpeech = (onResult: (text: string) => void) => {
           recognition.onresult = (event: any) => {
             const transcript = Array.from(event.results)
-              .map((result: any) => result[0])
+              .map((result: any) => (result as any)[0])
               .map((result: any) => result.transcript)
               .join('');
-            if (event.results[0].isFinal) {
+            if ((event.results[0] as any).isFinal) {
               onResult(transcript);
             }
           };
           recognition.start();
           setIsRecording(true);
-          (window as any).isRecording = true;
         };
 
         (window as any).stopSpeech = () => {
           recognition.stop();
           setIsRecording(false);
-          (window as any).isRecording = false;
         };
       }
     }
@@ -75,45 +61,22 @@ export default function MockInterview() {
 
   const handleStart = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!role) {
-      alert("Please enter a target role");
-      return;
-    }
+    if (!role) return setError("Please enter a target role");
     
     setLoading(true);
     setError('');
     
-    console.log("--- Starting Mock Interview ---");
-    console.log("Sending role:", role);
-    console.log(`Endpoint: ${API_URL}/api/ai/interview/start`);
-
     try {
-      const res = await fetch(`${API_URL}/api/ai/interview/start`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: JSON.stringify({ role })
-      });
-
-      if (!res.ok) {
-        console.error("API error");
-        alert("Something went wrong");
-        throw new Error("API error");
-      }
-
-      const data = await res.json();
-      console.log("Questions:", data.questions);
-      setQuestions(data.questions);
-      setAnswers(new Array(data.questions.length).fill(''));
+      const res = await api.post('/ai/interview/start', { role });
+      setQuestions(res.data.questions);
+      setAnswers(new Array(res.data.questions.length).fill(''));
       setIsInterviewActive(true);
       setCurrentStep(0);
       setTimeLeft(300);
       setEvaluation(null);
     } catch (err: any) {
       console.error("Interview Start Error:", err);
-      setError(err.message || 'Failed to start interview. Try again.');
+      setError('Failed to start interview.');
     } finally {
       setLoading(false);
     }
@@ -136,37 +99,16 @@ export default function MockInterview() {
     setEvaluating(true);
     setIsInterviewActive(false);
     
-    console.log("--- Evaluating Interview ---");
-    console.log("Sending role:", role);
-    console.log("Answers:", answers);
-    console.log(`Endpoint: ${API_URL}/api/ai/interview/evaluate`);
-
     try {
-      const res = await fetch(`${API_URL}/api/ai/interview/evaluate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        body: JSON.stringify({ 
-          role, 
-          questions, 
-          userAnswers: answers 
-        })
+      const res = await api.post('/ai/interview/evaluate', { 
+        role, 
+        questions, 
+        userAnswers: answers 
       });
-
-      if (!res.ok) {
-        console.error("API error");
-        alert("Something went wrong");
-        throw new Error("API error");
-      }
-
-      const data = await res.json();
-      console.log("Evaluation Result:", data);
-      setEvaluation(data);
+      setEvaluation(res.data);
     } catch (err: any) {
       console.error("Evaluation Error:", err);
-      setError(err.message || 'Evaluation failed.');
+      setError('Evaluation failed.');
     } finally {
       setEvaluating(false);
     }
@@ -189,25 +131,40 @@ export default function MockInterview() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="space-y-4 p-5 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-            <h3 className="text-emerald-400 font-semibold flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5" />
-              Strengths
+          <div className="space-y-4 p-5 rounded-xl bg-emerald-50 border border-emerald-100">
+            <h3 className="text-emerald-700 font-bold flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5" /> Strengths
             </h3>
-            <p className="text-sm text-gray-700 leading-relaxed">{evaluation.strengths}</p>
+            <ul className="space-y-1">
+              {evaluation.strengths?.map((s: string, i: number) => (
+                <li key={i} className="text-xs text-gray-600 flex items-start gap-2">
+                  <span className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                  {s}
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="space-y-4 p-5 rounded-xl bg-red-50 border border-red-100">
-            <h3 className="text-red-600 font-semibold flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" />
-              Areas for Improvement
+            <h3 className="text-red-700 font-bold flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" /> Growth Areas
             </h3>
-            <p className="text-sm text-gray-700 leading-relaxed">{evaluation.weaknesses}</p>
+            <ul className="space-y-1">
+              {evaluation.weaknesses?.map((w: string, i: number) => (
+                <li key={i} className="text-xs text-gray-600 flex items-start gap-2">
+                  <span className="w-1 h-1 rounded-full bg-red-400 mt-1.5 flex-shrink-0" />
+                  {w}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        <div className="p-6 rounded-xl bg-gray-50 border border-gray-100 mb-8">
-          <h3 className="text-gray-900 font-semibold mb-2">Expert Feedback</h3>
-          <p className="text-sm text-gray-600 leading-relaxed italic">{evaluation.feedback}</p>
+        <div className="p-6 rounded-2xl bg-indigo-50 border border-indigo-100 mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-indigo-900 font-bold">Expert Feedback</h3>
+            <span className="bg-indigo-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">{evaluation.status}</span>
+          </div>
+          <p className="text-sm text-indigo-800 leading-relaxed italic">{evaluation.overall_feedback}</p>
         </div>
 
         <button

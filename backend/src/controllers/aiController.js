@@ -93,28 +93,36 @@ ${question}`;
   }
 };
 
-// ─── CAREER PATH GENERATOR ──────────────────────────────
+// ─── CAREER PATH GENERATOR (UPGRADED) ──────────────────────
 exports.generateCareerPath = async (req, res) => {
   try {
     const { goal } = req.body;
-    
-    const prompt = `Create a step-by-step learning roadmap for becoming a ${goal || 'professional'}.
-Include:
-- Required skills
-- Recommended topics
-- Logical course sequence
-Use Markdown for formatting.`;
+    if (!goal) return res.status(400).json({ error: "Goal required" });
+
+    const prompt = `Create a high-impact, professional career roadmap for becoming a ${goal}.
+Return ONLY a valid JSON object:
+{
+  "roadmap": [
+    { "step": "Foundations", "topics": ["A", "B"], "timeline": "Month 1" },
+    { "step": "Advanced UI/UX", "topics": ["X", "Y"], "timeline": "Month 2" }
+  ],
+  "required_skills": ["Skill 1", "Skill 2"],
+  "total_timeline": "6 Months",
+  "recommended_courses": ["Python for Beginners", "Data Science Foundations"]
+}
+Use natural language for course names that sound like common educational subjects.`;
 
     const completion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
       model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
     });
 
-    const roadmap = completion.choices[0]?.message?.content || "Roadmap generation failed.";
-    return res.json({ roadmap });
+    const data = JSON.parse(completion.choices[0]?.message?.content);
+    return res.json(data);
   } catch (err) {
     console.error("GROQ ERROR (Career):", err.message);
-    return res.status(500).json({ roadmap: "Failed to generate roadmap. Please try again later." });
+    return res.status(500).json({ error: "Failed to generate roadmap." });
   }
 };
 
@@ -177,13 +185,16 @@ Return ONLY a valid JSON array of objects with the following format:
   }
 };
 
-// ─── RECOMMENDATIONS ─────────────────────────────────────
+// ─── RECOMMENDATIONS (AI UPGRADE) ─────────────────────────
 exports.getRecommendations = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const [allSubjects] = await pool.query('SELECT id, title, description FROM subjects');
+    const userId = req.params.userId || req.user?.id;
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+
+    // Fetch user progress and all courses to find gaps
+    const [allSubjects] = await pool.query('SELECT title, description FROM subjects');
     const [progress] = await pool.query(`
-      SELECT DISTINCT s.id, s.title
+      SELECT DISTINCT s.title
       FROM subjects s
       JOIN sections sec ON s.id = sec.subject_id
       JOIN videos v ON sec.id = v.section_id
@@ -191,16 +202,30 @@ exports.getRecommendations = async (req, res) => {
       WHERE vp.user_id = ?
     `, [userId]);
 
-    const completedSubjectIds = progress.map(p => p.id);
-    const unstartedSubjects = allSubjects.filter(s => !completedSubjectIds.includes(s.id));
+    const completedTitles = progress.map(p => p.title);
+    
+    const prompt = `Based on the student's completed courses: ${completedTitles.join(', ') || 'None yet'}.
+Available courses: ${allSubjects.map(s => s.title).join(', ')}.
 
-    if (unstartedSubjects.length === 0) return res.json({ recommendations: [] });
+Recommend the top 3 best next courses for this student.
+Return ONLY a valid JSON array of objects:
+[
+  { "title": "Course Title", "reason": "Why this is recommended" }
+]`;
 
-    const finalRecs = unstartedSubjects.slice(0, 2);
-    return res.json({ recommendations: finalRecs });
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    });
+
+    const result = JSON.parse(completion.choices[0]?.message?.content);
+    const recommendations = Array.isArray(result) ? result : (result.recommendations || Object.values(result)[0]);
+
+    return res.json({ recommendations });
   } catch (err) {
     console.error("AI ERROR (Recommendations):", err.message);
-    return res.json({ recommendations: [] });
+    return res.status(500).json({ recommendations: [] });
   }
 };
 
@@ -363,20 +388,22 @@ Return ONLY a valid JSON array of strings: ["Question 1", "Question 2", ...]`;
   }
 };
 
-// ─── MOCK INTERVIEW EVALUATE ───────────────────────────
+// ─── MOCK INTERVIEW EVALUATE (UPGRADED) ───────────────────
 exports.evaluateInterview = async (req, res) => {
   try {
     const { role, questions, userAnswers } = req.body;
-    const prompt = `Evaluate these interview answers for a ${role} role.
-Questions: ${JSON.stringify(questions)}
-Answers: ${JSON.stringify(userAnswers)}
+    
+    const prompt = `You are a Senior Technical Interviewer. Evaluate this candidate for a ${role} position.
+Questions & Answers:
+${questions.map((q, i) => `Q: ${q}\nA: ${userAnswers[i] || 'No answer provided'}`).join('\n\n')}
 
 Return ONLY a valid JSON object:
 {
-  "score": 75,
-  "strengths": "...",
-  "weaknesses": "...",
-  "feedback": "..."
+  "score": 85,
+  "strengths": ["Clear explanation of X", "Good grasp of Y"],
+  "weaknesses": ["Improve depth in Z"],
+  "overall_feedback": "A detailed professional feedback summary...",
+  "status": "Strong Hire / Hire / No Hire"
 }`;
 
     const completion = await groq.chat.completions.create({
@@ -389,31 +416,34 @@ Return ONLY a valid JSON object:
     return res.json(evaluation);
   } catch (err) {
     console.error("GROQ ERROR (Evaluate):", err.message);
-    return res.status(500).json({ score: 0, feedback: "Evaluation failed." });
+    return res.status(500).json({ score: 0, overall_feedback: "Evaluation failed. Please try again." });
   }
 };
 
 
-// ─── JOB MATCH ANALYZER ──────────────────────────────────
+// ─── JOB MATCH ANALYZER (MULTI-JOB UPGRADE) ────────────────
 exports.jobMatch = async (req, res) => {
   try {
-    const { resumeText, jobDescription } = req.body;
-    if (!resumeText || !jobDescription) {
-      return res.status(400).json({ error: "Resume and Job Description required" });
+    const { resumeText, jobs } = req.body;
+    if (!resumeText || !Array.isArray(jobs) || jobs.length === 0) {
+      return res.status(400).json({ error: "Resume text and array of jobs required" });
     }
 
-    const prompt = `Match this resume with the job description.
-Resume: ${resumeText.substring(0, 3000)}
-JD: ${jobDescription.substring(0, 3000)}
+    const prompt = `Compare this resume with these job openings.
+Resume: ${resumeText.substring(0, 2000)}
 
-Return ONLY a valid JSON object:
-{
-  "match_score": 85,
-  "missing_keywords": ["Keyword 1", "Keyword 2"],
-  "matched_skills": ["Skill A", "Skill B"],
-  "suggestions": ["Add X", "Quantify Y"],
-  "improved_resume": "The full tailored resume content..."
-}`;
+Jobs:
+${jobs.map((j, i) => `${i + 1}. ${j.company} - ${j.role}: ${j.description?.substring(0, 500)}`).join('\n')}
+
+Return ONLY a valid JSON array of objects:
+[
+  {
+    "company": "...",
+    "role": "...",
+    "matchScore": 85,
+    "missingSkills": ["Skill 1", "Skill 2"]
+  }
+]`;
 
     const completion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
@@ -422,7 +452,10 @@ Return ONLY a valid JSON object:
     });
 
     const result = JSON.parse(completion.choices[0]?.message?.content);
-    return res.json(result);
+    // Ensure it's an array
+    const finalResult = Array.isArray(result) ? result : (result.matches || result.data || Object.values(result)[0]);
+    
+    return res.json(finalResult);
   } catch (err) {
     console.error("GROQ ERROR (Job Match):", err.message);
     return res.status(500).json({ error: "Internal server error" });

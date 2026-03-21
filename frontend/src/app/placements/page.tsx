@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Sparkles, MapPin, Briefcase, IndianRupee, ExternalLink, Filter } from 'lucide-react';
+import { Sparkles, MapPin, Briefcase, IndianRupee, ExternalLink, Filter, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 
 const CATEGORIES = ["All", "Developer", "Data", "AI/ML", "Cloud"];
@@ -60,6 +60,39 @@ export default function PlacementsPage() {
     }
   };
 
+  const [matching, setMatching] = useState(false);
+  const [matchResults, setMatchResults] = useState<any[]>([]);
+
+  const handleApply = async (job: any) => {
+    try {
+      await api.post('/job-tracker/apply', {
+        company: job.company.display_name,
+        role: job.title
+      });
+      console.log("Application tracked");
+    } catch (err) {
+      console.error("Tracking failed:", err);
+    }
+    window.open(job.redirect_url, '_blank', 'noopener,noreferrer');
+  };
+
+  const checkMatch = async () => {
+    const resumeText = localStorage.getItem('generatedResume') || "Experienced software developer with skills in React, Node.js, and Python.";
+    
+    setMatching(true);
+    try {
+      const res = await api.post('/ai/job-match', {
+        resumeText,
+        jobs: filteredJobs.slice(0, 10)
+      });
+      setMatchResults(res.data);
+    } catch (err) {
+      console.error("Match failed:", err);
+    } finally {
+      setMatching(false);
+    }
+  };
+
   useEffect(() => {
     fetchJobs();
   }, []);
@@ -67,7 +100,7 @@ export default function PlacementsPage() {
   const filteredJobs = useMemo(() => {
     if (activeFilter === "All") return jobs;
     return jobs.filter(job => {
-      const text = `${job.title} ${job.description || ''}`.toLowerCase();
+      const text = `${job.title} ${job.company.display_name} ${job.description || ''}`.toLowerCase();
       if (activeFilter === "Developer") return text.includes('developer') || text.includes('engineer') || text.includes('backend') || text.includes('frontend') || text.includes('fullstack');
       if (activeFilter === "Data") return text.includes('data') || text.includes('analyst') || text.includes('scientist');
       if (activeFilter === "AI/ML") return text.includes('ai') || text.includes('ml') || text.includes('machine learning') || text.includes('intelligence');
@@ -95,9 +128,18 @@ export default function PlacementsPage() {
               Direct Career Placements
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">🚀 Jobs & Placements</h1>
-            <p className="text-indigo-100 max-w-2xl mx-auto text-lg">
+            <p className="text-indigo-100 max-w-2xl mx-auto text-lg mb-8">
                 Explore 100+ verified roles from global tech giants and innovative startups.
             </p>
+            
+            <button 
+              onClick={checkMatch}
+              disabled={matching}
+              className="bg-white text-indigo-600 px-8 py-3 rounded-full font-bold shadow-xl hover:scale-105 transition disabled:opacity-50 flex items-center gap-2 mx-auto"
+            >
+              {matching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+              {matching ? "Analyzing Match..." : "AI Resume Match Check"}
+            </button>
         </div>
       </div>
 
@@ -124,62 +166,81 @@ export default function PlacementsPage() {
           ))}
         </div>
 
-        {/* Dense Grid Layout (Step 1) */}
+        {/* Dense Grid Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredJobs.map((job: any, index) => (
-            <div key={job.id || index} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col h-full group p-5 min-h-[260px]">
-                
-                <div className="flex justify-between items-start mb-4">
-                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500">
-                        <Briefcase className="w-5 h-5" />
-                    </div>
-                </div>
-
-                <h2 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors uppercase tracking-tight line-clamp-1">
-                    {job.company.display_name}
-                </h2>
-
-                <p className="text-gray-600 text-sm font-medium mb-3 line-clamp-1">
-                    {job.title}
-                </p>
-
-                <div className="space-y-2 mb-5">
-                    <div className="flex items-center text-[11px] text-gray-400 font-bold uppercase tracking-wider">
-                        <MapPin className="w-3 h-3 mr-1.5 text-indigo-400" />
-                        📍 {job.location.display_name}
-                    </div>
-                    {job.salary_min && (
-                        <div className="flex items-center text-sm text-emerald-600 font-extrabold tracking-tight">
-                            <IndianRupee className="w-3.5 h-3.5 mr-1" />
-                            ₹ {job.salary_min.toLocaleString()} {job.salary_max ? `- ₹ ${job.salary_max.toLocaleString()}` : ''}
-                        </div>
+            {filteredJobs.map((job: any, index) => {
+              const match = matchResults.find(m => m.company === job.company.display_name && m.role === job.title);
+              
+              return (
+                <div key={job.id || index} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col h-full group p-5 min-h-[300px] relative">
+                    
+                    {match && (
+                      <div className="absolute top-4 right-4 bg-orange-100 text-orange-600 px-2 py-1 rounded-lg text-[10px] font-bold animate-pulse">
+                        🔥 {match.matchScore}% Match
+                      </div>
                     )}
-                </div>
 
-                <div className="mt-auto pt-4 border-t border-gray-50 flex flex-col gap-3">
-                    <details className="group/details">
-                        <summary className="cursor-pointer text-indigo-600 font-bold text-[11px] flex items-center gap-1 hover:underline list-none uppercase tracking-widest">
-                            Quick View
-                            <span className="group-open/details:rotate-180 transition-transform duration-300 transform inline-block">▼</span>
-                        </summary>
-                        <div className="p-3 bg-gray-50 rounded-xl mt-3 border border-gray-100">
-                            <p className="text-[11px] text-gray-500 leading-relaxed font-semibold">
-                                {job.description?.replace(/<\/?[^>]+(>|$)/g, "").slice(0, 150)}...
-                            </p>
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500">
+                            <Briefcase className="w-5 h-5" />
                         </div>
-                    </details>
+                    </div>
 
-                    <a
-                        href={job.redirect_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition-all duration-300 shadow-sm"
-                    >
-                        Apply Now ↗
-                    </a>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors uppercase tracking-tight line-clamp-1">
+                        {job.company.display_name}
+                    </h2>
+
+                    <p className="text-gray-600 text-sm font-medium mb-3 line-clamp-1">
+                        {job.title}
+                    </p>
+
+                    <div className="space-y-2 mb-5">
+                        <div className="flex items-center text-[11px] text-gray-400 font-bold uppercase tracking-wider">
+                            <MapPin className="w-3 h-3 mr-1.5 text-indigo-400" />
+                            📍 {job.location.display_name}
+                        </div>
+                        {job.salary_min && (
+                            <div className="flex items-center text-sm text-emerald-600 font-extrabold tracking-tight">
+                                <IndianRupee className="w-3.5 h-3.5 mr-1" />
+                                ₹ {job.salary_min.toLocaleString()} {job.salary_max ? `- ₹ ${job.salary_max.toLocaleString()}` : ''}
+                            </div>
+                        )}
+                    </div>
+
+                    {match && match.missingSkills?.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-widest">Missing Skills</p>
+                        <div className="flex flex-wrap gap-1">
+                          {match.missingSkills.slice(0, 3).map((s: string) => (
+                            <span key={s} className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[9px] font-medium">{s}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-auto pt-4 border-t border-gray-50 flex flex-col gap-3">
+                        <details className="group/details">
+                            <summary className="cursor-pointer text-indigo-600 font-bold text-[11px] flex items-center gap-1 hover:underline list-none uppercase tracking-widest">
+                                Quick View
+                                <span className="group-open/details:rotate-180 transition-transform duration-300 transform inline-block">▼</span>
+                            </summary>
+                            <div className="p-3 bg-gray-50 rounded-xl mt-3 border border-gray-100">
+                                <p className="text-[11px] text-gray-500 leading-relaxed font-semibold">
+                                    {job.description?.replace(/<\/?[^>]+(>|$)/g, "").slice(0, 150)}...
+                                </p>
+                            </div>
+                        </details>
+
+                        <button
+                            onClick={() => handleApply(job)}
+                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition-all duration-300 shadow-sm"
+                        >
+                            Apply Now ↗
+                        </button>
+                    </div>
                 </div>
-            </div>
-            ))}
+              );
+            })}
         </div>
         
         {filteredJobs.length === 0 && !loading && (
